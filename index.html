@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>La caja de ToTri</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Cinzel:wght@500;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icone -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --font-heading: 'Cinzel', serif;
+      --font-subheading: 'Playfair Display', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-handwriting: 'Caveat', cursive;
+      --font-typewriter: 'Courier Prime', monospace;
+
+      --paper-cream: #FAF6EE;
+      --paper-kraft: #D8BD9B;
+      --paper-rose: #E8C3BC;
+      --paper-sage: #B4C4B1;
+      --paper-terracotta: #D39E82;
+      --paper-blue: #A9C2D1;
+
+      --wood-dark: #2B1810;
+      --gold-accent: #D4AF37;
+      --wax-crimson: #911821;
+      --wax-dark: #5A0E13;
+
+      --paper-shadow: 0 16px 32px rgba(10, 5, 2, 0.45);
+    }
+
+    body {
+      font-family: var(--font-body);
+      min-height: 100vh;
+      color: #2C221E;
+      background-color: var(--wood-dark);
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(255, 230, 200, 0.15) 0%, rgba(10, 5, 2, 0.85) 90%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 4px),
+        linear-gradient(90deg, #2B1810 0%, #3D2216 25%, #2B1810 50%, #442719 75%, #2B1810 100%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+      padding-bottom: 60px;
+      overscroll-behavior-y: none;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px 25px;
+      position: relative;
+    }
+
+    .app-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      color: #F8E8D0;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 20px rgba(212, 175, 55, 0.2);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .app-subtitle {
+      font-family: var(--font-handwriting);
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      color: #D8BD9B;
+      opacity: 0.9;
+    }
+
+    .desk-toolbar {
+      max-width: 1100px;
+      margin: 20px auto 35px;
+      padding: 0 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .search-filter-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      background: rgba(20, 10, 5, 0.6);
+      padding: 8px 16px;
+      border-radius: 40px;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    .search-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #FAF6EE;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      padding: 6px 10px;
+      width: 180px;
+    }
+
+    .search-input::placeholder {
+      color: #A89582;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: #C2B09C;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-weight: 500;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--gold-accent);
+      color: #1A0D07;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, #7A2826 0%, #4A1211 100%);
+      color: #F8E8D0;
+      border: 1px solid var(--gold-accent);
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+      transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.7), 0 0 12px rgba(212, 175, 55, 0.3);
+      background: linear-gradient(135deg, #8C2E2C 0%, #5C1715 100%);
+    }
+
+    .envelope-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 40px 30px;
+      perspective: 1200px;
+    }
+
+    .envelope-card {
+      position: relative;
+      width: 100%;
+      height: 210px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+      transform-style: preserve-3d;
+    }
+
+    .envelope-card:hover {
+      transform: translateY(-8px) rotateX(4deg) rotateY(-2deg) scale(1.02);
+    }
+
+    .envelope-body {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      box-shadow: var(--paper-shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 25px;
+      background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.15) 100%);
+    }
+
+    .envelope-card[data-color="kraft"] .envelope-body { background-color: var(--paper-kraft); }
+    .envelope-card[data-color="rose"] .envelope-body { background-color: var(--paper-rose); }
+    .envelope-card[data-color="sage"] .envelope-body { background-color: var(--paper-sage); }
+    .envelope-card[data-color="terracotta"] .envelope-body { background-color: var(--paper-terracotta); }
+    .envelope-card[data-color="blue"] .envelope-body { background-color: var(--paper-blue); }
+    .envelope-card[data-color="cream"] .envelope-body { background-color: var(--paper-cream); }
+
+    .fold-left {
+      position: absolute;
+      top: 0; left: 0; bottom: 0; width: 50%;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+      background: rgba(0,0,0,0.04);
+      border-right: 1px solid rgba(0,0,0,0.06);
+      pointer-events: none;
+    }
+
+    .fold-right {
+      position: absolute;
+      top: 0; right: 0; bottom: 0; width: 50%;
+      clip-path: polygon(100% 0, 0 50%, 100% 100%);
+      background: rgba(0,0,0,0.08);
+      border-left: 1px solid rgba(0,0,0,0.06);
+      pointer-events: none;
+    }
+
+    .fold-bottom {
+      position: absolute;
+      left: 0; right: 0; bottom: 0; height: 50%;
+      clip-path: polygon(0 100%, 50% 15%, 100% 100%);
+      background: rgba(0,0,0,0.06);
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+      pointer-events: none;
+    }
+
+    .fold-top-flap {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 50%;
+      clip-path: polygon(0 0, 50% 85%, 100% 0);
+      background: rgba(255,255,255,0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transform-origin: top center;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 3;
+    }
+
+    .envelope-card.is-opened .fold-top-flap {
+      transform: rotateX(180deg);
+      z-index: 1;
+      filter: brightness(0.9);
+    }
+
+    .envelope-interior-lining {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 50%;
+      clip-path: polygon(0 0, 50% 80%, 100% 0);
+      background-image: repeating-linear-gradient(45deg, rgba(145,24,33,0.08) 0, rgba(145,24,33,0.08) 10px, transparent 10px, transparent 20px);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 1;
+    }
+
+    .envelope-card.is-opened .envelope-interior-lining {
+      opacity: 1;
+    }
+
+    .envelope-label-tag {
+      position: relative;
+      z-index: 4;
+      background: #FAF6EE;
+      padding: 12px 18px;
+      border-radius: 3px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08);
+      width: 88%;
+      text-align: center;
+      transform: rotate(-1deg);
+      background-image: linear-gradient(180deg, #FFFFFF 0%, #F3EBDD 100%);
+      margin-top: 10px;
+    }
+
+    .envelope-label-tag::before, .envelope-label-tag::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      width: 28px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px dashed rgba(0,0,0,0.15);
+      backdrop-filter: blur(2px);
+    }
+    .envelope-label-tag::before { left: -8px; transform: rotate(-8deg); }
+    .envelope-label-tag::after { right: -8px; transform: rotate(6deg); }
+
+    .envelope-label-text {
+      font-family: var(--font-subheading);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2A1A10;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .wax-seal {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%) scale(1);
+      width: 38px;
+      height: 38px;
+      background: radial-gradient(circle at 35% 35%, #C82D37 0%, var(--wax-crimson) 55%, var(--wax-dark) 100%);
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 2px 3px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      transition: all 0.4s ease;
+    }
+
+    .wax-seal::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 42% 58% 60% 40% / 45% 45% 55% 55%;
+      background: inherit;
+      z-index: -1;
+      transform: rotate(25deg);
+    }
+
+    .wax-seal-icon {
+      color: var(--gold-accent);
+      font-size: 0.95rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .envelope-card.is-opened .wax-seal {
+      opacity: 0;
+      transform: translateX(-50%) scale(0.5);
+      pointer-events: none;
+    }
+
+    .opened-ink-stamp {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      border: 2px dashed #911821;
+      color: #911821;
+      font-family: var(--font-typewriter);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      transform: rotate(-12deg);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      letter-spacing: 1px;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .envelope-card.is-opened .opened-ink-stamp {
+      opacity: 0.85;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 6, 4, 0.82);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    .envelope-card:focus-visible {
+      outline: 3px solid var(--gold-accent);
+      outline-offset: 6px;
+      border-radius: 8px;
+    }
+
+    .letter-sheet {
+      position: relative;
+      width: 100%;
+      max-width: 760px;
+      max-height: 90vh;
+      background: #FAF6EE;
+      background-image: linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+      background-size: 100% 28px;
+      border-radius: 6px;
+      padding: 45px 45px 35px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      transform: translateY(30px) scale(0.95);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.active .letter-sheet {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: rgba(0,0,0,0.06);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4A3525;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: #911821;
+      color: #FFF;
+    }
+
+    .letter-header-subtitle {
+      font-family: var(--font-typewriter);
+      font-size: 0.85rem;
+      color: #8C7355;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .letter-title {
+      font-family: var(--font-subheading);
+      font-size: 1.7rem;
+      color: #2A1A10;
+      margin-bottom: 25px;
+      line-height: 1.35;
+      border-bottom: 2px solid rgba(140, 115, 85, 0.2);
+      padding-bottom: 14px;
+    }
+
+    .letter-content-body {
+      font-family: var(--font-handwriting);
+      font-size: 1.8rem;
+      color: #1F150E;
+      line-height: 1.6;
+      margin-bottom: 30px;
+      overflow-wrap: break-word;
+    }
+
+    .letter-links-container {
+      margin: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .attached-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #F0E6D2;
+      border: 1px solid #D8BD9B;
+      color: #3A2312;
+      padding: 14px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      word-break: break-all;
+    }
+
+    .attached-link-btn:hover {
+      background: var(--gold-accent);
+      color: #1A0D07;
+      transform: translateX(4px);
+    }
+
+    .polaroid-frame {
+      background: #FFFFFF;
+      padding: 14px 14px 35px 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05);
+      transform: rotate(-2deg);
+      max-width: 360px;
+      margin: 25px auto 15px;
+      transition: transform 0.3s ease;
+    }
+
+    .polaroid-frame:hover {
+      transform: rotate(0deg) scale(1.02);
+    }
+
+    .polaroid-img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      display: block;
+      border-radius: 2px;
+    }
+
+    .polaroid-caption {
+      font-family: var(--font-handwriting);
+      font-size: 1.3rem;
+      color: #4A3525;
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 35px;
+      padding-top: 20px;
+      border-top: 1px dashed rgba(140, 115, 85, 0.3);
+    }
+
+    .secondary-btn {
+      background: transparent;
+      border: 1px solid #A89582;
+      color: #5C4A3A;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .secondary-btn:hover {
+      background: #E8DCC8;
+      color: #2A1A10;
+    }
+
+    .warning-btn {
+      background: transparent;
+      border: 1px solid #911821;
+      color: #911821;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .warning-btn:hover {
+      background: #911821;
+      color: #FFFFFF;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4A3525;
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #F5EEE2;
+      border: 1px solid #D8BD9B;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: #2A1A10;
+      outline: none;
+    }
+
+    .form-textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--gold-accent);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #C2B09C;
+    }
+
+    .empty-state i {
+      font-size: 2.2rem;
+      opacity: 0.6;
+      margin-bottom: 14px;
+    }
+
+    .empty-state p {
+      font-family: var(--font-handwriting);
+      font-size: 1.4rem;
+      line-height: 1.4;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    @media (max-width: 600px) {
+      /* 16px evita l'auto-zoom fastidioso di iOS quando si tocca un campo */
+      .search-input, .form-input, .form-select, .form-textarea {
+        font-size: 16px;
+      }
+      .envelope-grid {
+        grid-template-columns: 1fr;
+      }
+      .letter-sheet {
+        padding: 30px 20px 25px;
+      }
+      .desk-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-filter-box {
+        justify-content: center;
+      }
+      .modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .modal-actions button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- IL GIOCO E' ORA PROTETTO COME TESTO IN UNA TEXTAREA INVISIBILE (NESSUN ERRORE POSSIBILE) -->
+  <textarea id="game-html-template" style="display: none;">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Crucigrama Misterioso</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            overscroll-behavior-y: none; /* Previene el scroll elástico molesto en iOS */
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .crossword-cell {
+            aspect-ratio: 1 / 1;
+            position: relative;
+        }
+
+        .crossword-input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            /* FONT-SIZE STRICT 16px: vital para evitar que iOS haga auto-zoom al enfocar */
+            font-size: 16px !important; 
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.375rem;
+            background-color: white;
+            color: #1e293b;
+            transition: all 0.2s ease-in-out;
+            caret-color: transparent;
+            padding: 0;
+            margin: 0;
+            -webkit-appearance: none; /* Elimina estilos por defecto en iOS */
+        }
+
+        .crossword-input:focus {
+            outline: none;
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .black-cell {
+            background-color: #1e293b;
+            border-radius: 0.375rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #475569;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .cell-marker {
+            position: absolute;
+            bottom: 1px;
+            right: 3px;
+            font-size: 10px;
+            font-weight: 900;
+            color: #ef4444; /* Rojo para destacar */
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Iluminación de las letras secretas al ganar */
+        .glow-yellow {
+            background-color: #fef08a !important;
+            border-color: #eab308 !important;
+            box-shadow: 0 0 15px 4px rgba(234, 179, 8, 0.6) !important;
+            color: #9a3412 !important;
+            z-index: 10;
+            position: relative;
+            transform: scale(1.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Área de Revelación */
+        #reveal-area {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
+            display: none; /* Oculto por defecto para ahorrar espacio */
+        }
+
+        #reveal-area.show {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .secret-slot {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 900;
+            color: white;
+            background: #eab308;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(234, 179, 8, 0.4);
+            transform: scale(0);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .secret-slot.pop {
+            transform: scale(1);
+        }
+
+        /* Clues styling para móvil */
+        .clues-container {
+            max-height: 40vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-10">
+
+    <!-- Encabezado -->
+    <header class="w-full bg-white shadow-sm p-4 sticky top-0 z-20">
+        <h1 class="text-xl font-black text-center text-slate-800">Crucigrama Misterioso</h1>
+        <p class="text-xs text-center text-slate-500 mt-1">Llena las casillas. Las letras rojas <span class="font-bold text-red-500">(A-E)</span> tienen un secreto.</p>
+    </header>
+
+    <!-- Contenedor Principal (Grid + Reveal) -->
+    <main class="w-full max-w-[400px] mx-auto p-4 flex-shrink-0">
+        
+        <!-- Cuadrícula 6x5 -->
+        <div id="crossword-grid" class="grid grid-cols-6 gap-1 w-full aspect-[6/5] mb-6">
+            <!-- Generado por Javascript para mantener el HTML limpio -->
+        </div>
+
+        <!-- Área de la Palabra Secreta Oculta -->
+        <div id="reveal-area" class="flex-col items-center mb-4 bg-white p-4 rounded-xl shadow-md border border-yellow-200">
+            <p class="text-xs font-bold text-yellow-600 uppercase tracking-widest mb-3 text-center">¡La palabra secreta es!</p>
+            <div class="flex gap-2 justify-center w-full" id="secret-word-slots">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-slate-400 font-bold mb-1">(A)</span>
+                    <div class="secret-slot" id="slot-A">T</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-slate-400 font-bold mb-1">(B)</span>
+                    <div class="secret-slot" id="slot-B">O</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-slate-400 font-bold mb-1">(C)</span>
+                    <div class="secret-slot" id="slot-C">T</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-slate-400 font-bold mb-1">(D)</span>
+                    <div class="secret-slot" id="slot-D">R</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-slate-400 font-bold mb-1">(E)</span>
+                    <div class="secret-slot" id="slot-E">I</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pistas / Clues -->
+    <section class="w-full max-w-[400px] mx-auto px-4 flex-grow clues-container">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4">
+            <h2 class="text-sm font-black text-blue-600 mb-2 flex items-center gap-1">
+                ➡️ HORIZONTALES
+            </h2>
+            <ul class="space-y-2 text-sm text-slate-600">
+                <li><strong class="text-slate-900">1.</strong> Recipiente con asa que se usa para tomar café o té.</li>
+                <li><strong class="text-slate-900">2.</strong> Transporte público subterráneo de las ciudades.</li>
+                <li><strong class="text-slate-900">4.</strong> Mamífero grande y peludo al que le gusta comer miel.</li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <h2 class="text-sm font-black text-blue-600 mb-2 flex items-center gap-1">
+                ⬇️ VERTICALES
+            </h2>
+            <ul class="space-y-2 text-sm text-slate-600">
+                <li><strong class="text-slate-900">1.</strong> Vehículo largo compuesto por vagones que va por las vías.</li>
+                <li><strong class="text-slate-900">3.</strong> Corriente natural de agua que fluye y desemboca en el mar.</li>
+            </ul>
+        </div>
+    </section>
+
+    <script>
+        // Mapeo exacto de la cuadrícula: 5 filas x 6 columnas
+        const gridData = [
+            [null, { char: 'T', num: 1, marker: 'A' }, { char: 'A' }, { char: 'Z' }, { char: 'A' }, null],
+            [null, { char: 'R' }, null, null, null, null],
+            [{ char: 'M', num: 2 }, { char: 'E' }, { char: 'T', marker: 'C' }, { char: 'R', num: 3, marker: 'D' }, { char: 'O' }, null],
+            [null, { char: 'N' }, null, { char: 'I', marker: 'E' }, null, null],
+            [null, null, null, { char: 'O', num: 4 }, { char: 'S' }, { char: 'O', marker: 'B' }]
+        ];
+
+        const gridContainer = document.getElementById('crossword-grid');
+        let inputs = [];
+        let isGameWon = false;
+
+        function initGrid() {
+            for (let row = 0; row < gridData.length; row++) {
+                for (let col = 0; col < gridData[row].length; col++) {
+                    const cellData = gridData[row][col];
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'crossword-cell';
+
+                    if (cellData === null) {
+                        cellDiv.classList.add('black-cell');
+                    } else {
+                        // Número superior izquierdo
+                        if (cellData.num) {
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'cell-number';
+                            numSpan.innerText = cellData.num;
+                            cellDiv.appendChild(numSpan);
+                        }
+
+                        // Marcador inferior derecho (A, B, C, D, E)
+                        if (cellData.marker) {
+                            const markerSpan = document.createElement('span');
+                            markerSpan.className = 'cell-marker';
+                            markerSpan.innerText = `(${cellData.marker})`;
+                            cellDiv.appendChild(markerSpan);
+                        }
+
+                        // Input Testual
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.className = 'crossword-input';
+                        input.autocomplete = 'off';
+                        input.autocorrect = 'off';
+                        input.autocapitalize = 'characters';
+                        input.spellcheck = false;
+                        input.inputMode = 'text';
+                        input.setAttribute('aria-label', `Fila ${row + 1}, columna ${col + 1}`);
+                        input.dataset.row = row;
+                        input.dataset.col = col;
+                        input.dataset.char = cellData.char;
+                        input.dataset.marker = cellData.marker || '';
+
+                        // Eventos optimizados para móvil
+                        input.addEventListener('input', handleInput);
+                        input.addEventListener('keydown', handleKeyDown);
+                        input.addEventListener('focus', (e) => {
+                            // Retraso ligero para que el teclado suba y luego seleccione
+                            setTimeout(() => e.target.select(), 50);
+                        });
+
+                        cellDiv.appendChild(input);
+                        inputs.push(input);
+                    }
+                    gridContainer.appendChild(cellDiv);
+                }
+            }
+        }
+
+        function handleInput(e) {
+            if (isGameWon) return;
+            const input = e.target;
+            
+            // Forzar mayúsculas
+            input.value = input.value.toUpperCase();
+
+            // Auto-focus a la siguiente casilla si se insertó una letra
+            if (input.value !== '') {
+                autoFocusNext(input);
+            }
+
+            checkWinCondition();
+        }
+
+        // Retroceso en una casilla vacía: vuelve a la casilla anterior
+        function handleKeyDown(e) {
+            if (isGameWon || e.key !== 'Backspace' || e.target.value !== '') return;
+            const index = inputs.indexOf(e.target);
+            if (index > 0) {
+                e.preventDefault();
+                const prev = inputs[index - 1];
+                prev.value = '';
+                prev.focus();
+            }
+        }
+
+        // Lógica simple de auto-focus (Intenta ir a la derecha, si no puede, intenta abajo)
+        function autoFocusNext(currentInput) {
+            const row = parseInt(currentInput.dataset.row);
+            const col = parseInt(currentInput.dataset.col);
+            
+            // Buscar input a la derecha
+            let next = inputs.find(i => parseInt(i.dataset.row) === row && parseInt(i.dataset.col) === col + 1);
+            if (!next) {
+                // Si no hay derecha, buscar abajo
+                next = inputs.find(i => parseInt(i.dataset.row) === row + 1 && parseInt(i.dataset.col) === col);
+            }
+            
+            if (next) {
+                next.focus();
+            } else {
+                currentInput.blur(); // Si no hay siguiente, ocultar teclado
+            }
+        }
+
+        function checkWinCondition() {
+            let isCompleteAndCorrect = true;
+
+            for (const input of inputs) {
+                if (input.value !== input.dataset.char) {
+                    isCompleteAndCorrect = false;
+                    break;
+                }
+            }
+
+            if (isCompleteAndCorrect && !isGameWon) {
+                triggerVictory();
+            }
+        }
+
+        function triggerVictory() {
+            isGameWon = true;
+
+            // Iluminar casillas A, B, C, D, E y deshabilitar edición
+            inputs.forEach(input => {
+                input.disabled = true;
+                if (input.dataset.marker) {
+                    input.classList.add('glow-yellow');
+                    // Para asegurar que el z-index surta efecto sobre los bordes adyacentes
+                    input.parentElement.style.zIndex = '10'; 
+                }
+            });
+
+            // Disparar confeti
+            triggerConfetti();
+
+            // Mostrar el área revelada
+            const revealArea = document.getElementById('reveal-area');
+            revealArea.classList.add('show');
+
+            // Scroll suave hacia abajo para asegurar que el usuario vea "TOTRI" en pantallas pequeñas
+            setTimeout(() => {
+                revealArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+
+            // Animar la aparición de las letras TOTRI con efecto pop
+            const slots = ['A', 'B', 'C', 'D', 'E'];
+            slots.forEach((marker, index) => {
+                setTimeout(() => {
+                    document.getElementById(`slot-${marker}`).classList.add('pop');
+                }, 800 + (index * 200)); // Efecto cascada
+            });
+        }
+
+        function triggerConfetti() {
+            var duration = 4 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, 
+                    origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 } 
+                }));
+            }, 250);
+        }
+
+        // Iniciar todo
+        window.onload = () => {
+            initGrid();
+        };
+    </script>
+</body>
+</html>
+  </textarea>
+  <!-- FINE DEL CODICE DEL GIOCO INVISIBILE -->
+
+  <header>
+    <h1 class="app-title">La caja de ToTri</h1>
+    <p class="app-subtitle">Istruzioni per i momenti speciali della vita</p>
+  </header>
+
+  <div class="desk-toolbar">
+    <div class="search-filter-box">
+      <i class="fa-solid fa-magnifying-glass" style="color: #A89582; font-size: 0.85rem;"></i>
+      <input type="text" id="searchInput" class="search-input" placeholder="Cerca una busta..." aria-label="Cerca una busta">
+      
+      <button class="filter-btn active" data-filter="all" id="btnFilterAll">Tutte (<span id="countAll">0</span>)</button>
+      <button class="filter-btn" data-filter="closed" id="btnFilterClosed">Da Aprire (<span id="countClosed">0</span>)</button>
+      <button class="filter-btn" data-filter="opened" id="btnFilterOpened">Aperte (<span id="countOpened">0</span>)</button>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="action-btn" id="btnNewEnvelope">
+        <i class="fa-solid fa-plus"></i> Nuova Busta
+      </button>
+      <button class="secondary-btn" id="btnResetData" title="Ripristina buste iniziali" aria-label="Ripristina buste iniziali" style="color: #D8BD9B; border-color: rgba(212, 175, 55, 0.3);">
+        <i class="fa-solid fa-rotate-left"></i>
+      </button>
+    </div>
+  </div>
+
+  <main class="envelope-grid" id="envelopeGrid"></main>
+
+  <!-- MODAL LETTURA -->
+  <div class="modal-overlay" id="readModal">
+    <div class="letter-sheet">
+      <button class="modal-close-btn" id="btnCloseReadModal" aria-label="Chiudi">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="letter-header-subtitle">Quando aprire:</div>
+      <h2 class="letter-title" id="readModalTitle">Titolo della Busta</h2>
+
+      <div class="letter-content-body" id="readModalContent"></div>
+
+      <div class="letter-links-container" id="readModalLinks"></div>
+
+      <div class="polaroid-frame" id="readModalPolaroid" style="display: none;">
+        <img src="" alt="Ricordo" class="polaroid-img" id="readModalImg">
+        <div class="polaroid-caption">Un momento speciale insieme</div>
+      </div>
+
+      <div class="modal-actions">
+        <div style="display: flex; gap: 10px;">
+          <button class="secondary-btn" id="btnEditEnvelope">
+            <i class="fa-solid fa-pen"></i> Modifica
+          </button>
+          <button class="secondary-btn" id="btnBackToOpened">
+            <i id="iconBackBtn" class="fa-solid fa-check"></i> <span id="lblBackBtn">Chiudi</span>
+          </button>
+        </div>
+
+        <button class="warning-btn" id="btnResealEnvelope" style="display: none;">
+          <i class="fa-solid fa-lock"></i> Richiudi Busta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FORM CREA/MODIFICA -->
+  <div class="modal-overlay" id="formModal">
+    <div class="letter-sheet" style="max-width: 580px;">
+      <button class="modal-close-btn" id="btnCloseFormModal" aria-label="Chiudi">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h2 class="letter-title" id="formModalTitle">Crea Nuova Busta</h2>
+
+      <form id="envelopeForm">
+        <input type="hidden" id="formEnvelopeId">
+
+        <div class="form-group">
+          <label class="form-label" for="formTitle">Quando aprire (Titolo della busta)*</label>
+          <input type="text" id="formTitle" class="form-input" placeholder="Es. Apri quando ti senti giù..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="formContent">Contenuto del Messaggio*</label>
+          <textarea id="formContent" class="form-textarea" placeholder="Scrivi qui il tuo messaggio segreto..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="formLinks">Link o URL collegati (separati da virgola)</label>
+          <input type="text" id="formLinks" class="form-input" placeholder="https://... , https://...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="formColor">Colore e Texture Carta</label>
+          <select id="formColor" class="form-select">
+            <option value="kraft">Carta Kraft Naturale</option>
+            <option value="cream">Pergamena Avorio</option>
+            <option value="rose">Rosa Cipria</option>
+            <option value="sage">Verde Salvia</option>
+            <option value="terracotta">Terracotta Caldo</option>
+            <option value="blue">Carta da Lettere Blu</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="formPhoto">URL Immagine o Foto (Opzionale)</label>
+          <input type="text" id="formPhoto" class="form-input" inputmode="url" placeholder="https://images.unsplash.com/...">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
+          <button type="button" class="secondary-btn" id="btnDeleteEnvelope" style="color: #911821; border-color: #911821; display: none;">
+            <i class="fa-solid fa-trash"></i> Elimina
+          </button>
+          <button type="submit" class="action-btn" style="margin-left: auto;">
+            Salva Busta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <canvas id="confettiCanvas" style="position: fixed; inset: 0; pointer-events: none; z-index: 2000;"></canvas>
+
+  <script>
+    const DEFAULT_ENVELOPES = [
+      {
+        id: "env-1",
+        title: "Apri quando ricevi questo regalo",
+        content: "[Testo da decidere]",
+        color: "cream",
+        isOpened: false,
+        links: []
+      },
+      {
+        id: "env-2",
+        title: "Apri quando stai facendo la valigia per venire a Roma",
+        content: "Come sempre mi sembra che non ci vediamo da 2 anni e la cosa che più desidero è vederti il prima possibile. Questo desiderio lo avrò sempre, se non ti vedo da 2 anni, da una settimana, da 1 giorno o da solo 1 ora. E questo sarà per sempre.",
+        color: "kraft",
+        isOpened: false,
+        links: []
+      },
+      {
+        id: "env-3",
+        title: "Apri prima di salire sull'aereo per tornare a Madrid",
+        content: "Ogni volta che ti saluto é sempre una mierda. Anche se sembra naturale, ogni volta che vai via divento triste e solo penso a quando ti rivedrò. Non immagino una vita senza stare vicino a te ❤️",
+        color: "rose",
+        isOpened: false,
+        links: []
+      },
+      {
+        id: "env-4",
+        title: "Apri quando ti viene tanta voglia di comprare vestiti da Zara",
+        content: "Già sai che in questo momento ti direi: tri tri estás llena de ropa, párate a comprar cosas! Pero bueno, ¡una última cosita vale? Te doy este bono de Zara para regalarte algo de pequeñín.",
+        color: "terracotta",
+        isOpened: false,
+        links: ["https://www.zara.com/"]
+      },
+      {
+        id: "env-5",
+        title: "Apri quando ti viene voglia di cucinare un cibo italiano",
+        content: "Una recetita para tiii! Pero bueno, possiamo farlo anche insieme, cosi posso mangiarlo anche io 😁\n\n1. Carbonara classica\n2. Pasta speck e mascarpone\n3. Pasta alla genovese",
+        color: "sage",
+        isOpened: false,
+        links: [
+          "https://ricette.giallozafferano.it/Spaghetti-alla-Carbonara.html",
+          "https://ricette.giallozafferano.it/Penne-con-speck-e-mascarpone.html",
+          "https://ricette.giallozafferano.it/Pasta-alla-Genovese.html"
+        ]
+      },
+      {
+        id: "env-6",
+        title: "Apri quando hai voglia di qualcosa di dolce dopo cena, cerca nella busta",
+        content: "Para mi tri tri pequeñita que quiere algo de dulce, te dejo esto. Guarda nella busta!",
+        color: "cream",
+        isOpened: false,
+        links: []
+      },
+      {
+        id: "env-7",
+        title: "Apri quando hai voglia di una cena de gordos sí o sí",
+        content: "Te mereces algo de gordo, puedes pedir lo que quieras, te invito yo con esto.\n\n- Buono regalo / Codice Glovo: [Inserisci qui il tuo codice]",
+        color: "blue",
+        isOpened: false,
+        links: ["https://www.glovoapp.com/"]
+      },
+      {
+        id: "env-8",
+        title: "Apri quando devi prendere una decisione stupida ma non sai cosa scegliere",
+        content: "Un gesto facile per scegliere più facilmente! prendi la moneta nella busta, tirala e se uscirà \"testa\" sceglierai l'opzione A, se uscirà \"croce\" sceglierai l'opzione B.\n\nBueno, luego llamame, que es mejor que jugárselo a cara o cruz!\n\n(Da aggiungere dentro: Una moneta fisica reale)",
+        color: "kraft",
+        isOpened: false,
+        links: []
+      },
+      {
+        id: "env-9",
+        title: "Apri quando hai voglia di ascoltare nuestra música",
+        content: "Nuestra cancion!",
+        color: "rose",
+        isOpened: false,
+        links: ["https://open.spotify.com/"]
+      },
+      {
+        id: "env-10",
+        title: "Apri quando te aburres un poquito",
+        // Ho integrato il segnaposto sicuro per il gioco
+        content: "Un giochino per te!\n\n<div id='game-container'></div>",
+        color: "sage",
+        isOpened: false,
+        links: []
+      },
+      {
+        id: "env-11",
+        title: "Apri quando quieres ver algunas fotos de nosotros",
+        content: "Guarda le nostre foto stampate dentro la busta o carica un ricordo speciale qui sopra! ❤️",
+        color: "terracotta",
+        isOpened: false,
+        photoUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80",
+        links: []
+      }
+    ];
+
+    const STORAGE_KEY = 'caja_totri_data_v4';
+
+    function deepClone(value) {
+      return typeof structuredClone === 'function'
+        ? structuredClone(value)
+        : JSON.parse(JSON.stringify(value));
+    }
+
+    let envelopes = [];
+    let activeFilter = 'all';
+    let activeSearchQuery = '';
+    let currentReadingId = null;
+
+    class AcousticSoundEngine {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          try {
+            this.ctx = new AudioCtx();
+          } catch (err) {
+            this.ctx = null;
+            return;
+          }
+        }
+        // Su iOS/Safari il contesto può restare sospeso finché non viene ripreso da un gesto utente
+        if (this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
+          this.ctx.resume().catch(() => {});
+        }
+      }
+
+      playOpen() {
+        this.init();
+        if (!this.ctx || this.ctx.state === 'closed') return;
+
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.25;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(400, now);
+        filter.frequency.exponentialRampToValueAtTime(1800, now + 0.2);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        noise.start(now);
+      }
+
+      playClose() {
+        this.init();
+        if (!this.ctx || this.ctx.state === 'closed') return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.16);
+      }
+    }
+
+    const soundEngine = new AcousticSoundEngine();
+
+    function loadEnvelopes() {
+      let loaded = null;
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) loaded = JSON.parse(saved);
+      } catch (err) {
+        console.warn('Dati salvati non leggibili, ripristino le buste predefinite.', err);
+        loaded = null;
+      }
+
+      if (Array.isArray(loaded)) {
+        envelopes = loaded
+          .filter(env => env && typeof env === 'object' && typeof env.id === 'string' && typeof env.title === 'string')
+          .map(env => ({
+            ...env,
+            content: typeof env.content === 'string' ? env.content : '',
+            color: env.color || 'kraft',
+            isOpened: Boolean(env.isOpened),
+            links: Array.isArray(env.links) ? env.links.filter(l => typeof l === 'string') : [],
+            photoUrl: typeof env.photoUrl === 'string' ? env.photoUrl : ''
+          }));
+      } else {
+        envelopes = deepClone(DEFAULT_ENVELOPES);
+        saveEnvelopes();
+      }
+
+      render();
+    }
+
+    function saveEnvelopes() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(envelopes));
+      } catch (err) {
+        // Safari in navigazione privata o quota piena: l'app resta usabile in memoria
+        console.warn('Impossibile salvare le buste nel browser.', err);
+      }
+      updateCounts();
+    }
+
+    function updateCounts() {
+      document.getElementById('countAll').innerText = envelopes.length;
+      document.getElementById('countClosed').innerText = envelopes.filter(e => !e.isOpened).length;
+      document.getElementById('countOpened').innerText = envelopes.filter(e => e.isOpened).length;
+    }
+
+    function setFilter(filterName) {
+      activeFilter = filterName;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filterName);
+      });
+      render();
+    }
+
+    function render() {
+      const grid = document.getElementById('envelopeGrid');
+      grid.innerHTML = '';
+
+      const query = activeSearchQuery.trim().toLowerCase();
+
+      const filtered = envelopes.filter(env => {
+        const matchesFilter = 
+          activeFilter === 'all' ||
+          (activeFilter === 'closed' && !env.isOpened) ||
+          (activeFilter === 'opened' && env.isOpened);
+
+        const matchesSearch = (env.title || '').toLowerCase().includes(query);
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '<i class="fa-regular fa-envelope-open"></i><p>Nessuna busta trovata.<br>Prova a cambiare filtro o crea una nuova busta.</p>';
+        grid.appendChild(empty);
+      }
+
+      filtered.forEach(env => {
+        const card = document.createElement('div');
+        card.className = `envelope-card ${env.isOpened ? 'is-opened' : ''}`;
+        card.dataset.id = env.id;
+        card.dataset.color = env.color || 'kraft';
+
+        card.innerHTML = `
+          <div class="envelope-body">
+            <div class="envelope-interior-lining"></div>
+            <div class="fold-left"></div>
+            <div class="fold-right"></div>
+            <div class="fold-bottom"></div>
+            <div class="fold-top-flap"></div>
+
+            <div class="envelope-label-tag">
+              <div class="envelope-label-text">${escapeHtml(env.title)}</div>
+            </div>
+
+            <div class="wax-seal">
+              <i class="fa-solid fa-heart wax-seal-icon"></i>
+            </div>
+
+            <div class="opened-ink-stamp">APERTA</div>
+          </div>
+        `;
+
+        card.addEventListener('click', () => openEnvelope(env.id));
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Apri la busta: ${env.title}`);
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openEnvelope(env.id);
+          }
+        });
+        grid.appendChild(card);
+      });
+
+      updateCounts();
+    }
+
+    function openEnvelope(id) {
+      const env = envelopes.find(e => e.id === id);
+      if (!env) return;
+
+      currentReadingId = id;
+      soundEngine.playOpen();
+
+      const wasAlreadyOpened = env.isOpened;
+
+      if (!env.isOpened) {
+        env.isOpened = true;
+        saveEnvelopes();
+        render();
+        triggerConfetti();
+      }
+
+      document.getElementById('readModalTitle').innerText = env.title;
+
+      const contentEl = document.getElementById('readModalContent');
+      contentEl.innerHTML = (env.content || '').replace(/\n/g, '<br>');
+
+      // Iniezione del Cruciverba: funziona per id, per titolo o per segnaposto nel testo
+      const gameTemplate = document.getElementById('game-html-template');
+      const hasGame = env.id === 'env-10'
+        || /id=["']game-container["']/i.test(env.content || '')
+        || (env.title || '').toLowerCase().includes('aburres');
+
+      if (hasGame && gameTemplate) {
+        let container = document.getElementById('game-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'game-container';
+          contentEl.appendChild(container);
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = 'min(620px, 68vh)';
+        iframe.style.minHeight = '400px';
+        iframe.style.border = '2px solid #D8BD9B';
+        iframe.style.borderRadius = '8px';
+        iframe.style.marginTop = '15px';
+        iframe.style.backgroundColor = '#f8fafc';
+        iframe.style.display = 'block';
+        iframe.setAttribute('title', 'Crucigrama Misterioso');
+        iframe.setAttribute('loading', 'lazy');
+
+        // Il gioco vive in un iframe isolato: nessun conflitto con l'app principale
+        iframe.srcdoc = gameTemplate.value;
+        container.appendChild(iframe);
+      }
+
+      const linksContainer = document.getElementById('readModalLinks');
+      linksContainer.innerHTML = '';
+
+      if (env.links && env.links.length > 0) {
+        env.links.forEach(rawLink => {
+          const url = normalizeLinkUrl(rawLink);
+          if (!url) return;
+          const a = document.createElement('a');
+          a.className = 'attached-link-btn';
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> ${escapeHtml(rawLink.trim())}`;
+          linksContainer.appendChild(a);
+        });
+      }
+
+      const photoFrame = document.getElementById('readModalPolaroid');
+      const photoImg = document.getElementById('readModalImg');
+      const photoUrl = normalizeImageUrl(env.photoUrl);
+
+      if (photoUrl) {
+        photoImg.onerror = () => { photoFrame.style.display = 'none'; };
+        photoImg.src = photoUrl;
+        photoFrame.style.display = 'block';
+      } else {
+        photoImg.onerror = null;
+        photoImg.removeAttribute('src');
+        photoFrame.style.display = 'none';
+      }
+
+      const btnReseal = document.getElementById('btnResealEnvelope');
+      const lblBackBtn = document.getElementById('lblBackBtn');
+      const iconBackBtn = document.getElementById('iconBackBtn');
+
+      if (!wasAlreadyOpened) {
+        btnReseal.style.display = 'none';
+        lblBackBtn.innerText = 'Chiudi e Riponi';
+        iconBackBtn.className = 'fa-solid fa-check';
+      } else {
+        btnReseal.style.display = 'inline-flex';
+        lblBackBtn.innerText = 'Indietro';
+        iconBackBtn.className = 'fa-solid fa-arrow-left';
+      }
+
+      document.getElementById('readModal').classList.add('active');
+      syncBodyScroll();
+    }
+
+    function closeReadModal() {
+      soundEngine.playClose();
+      const readModal = document.getElementById('readModal');
+      readModal.classList.remove('active');
+      currentReadingId = null;
+      syncBodyScroll();
+
+      // Libera l'iframe del gioco (e i suoi timer) solo dopo la dissolvenza
+      setTimeout(() => {
+        if (!readModal.classList.contains('active')) {
+          document.getElementById('readModalContent').innerHTML = '';
+        }
+      }, 450);
+    }
+
+    function syncBodyScroll() {
+      const anyModalOpen = document.querySelector('.modal-overlay.active') !== null;
+      document.body.classList.toggle('modal-open', anyModalOpen);
+    }
+
+    function resealEnvelope() {
+      if (!currentReadingId) return;
+      
+      const env = envelopes.find(e => e.id === currentReadingId);
+      if (env) {
+        env.isOpened = false;
+        saveEnvelopes();
+      }
+
+      closeReadModal();
+      setFilter('closed');
+    }
+
+    function openFormModal(editId = null) {
+      const form = document.getElementById('envelopeForm');
+      form.reset();
+
+      if (editId) {
+        const env = envelopes.find(e => e.id === editId);
+        if (!env) return;
+
+        document.getElementById('formModalTitle').innerText = 'Modifica Busta';
+        document.getElementById('formEnvelopeId').value = env.id;
+        document.getElementById('formTitle').value = env.title;
+        document.getElementById('formContent').value = env.content;
+        document.getElementById('formLinks').value = (env.links || []).join(', ');
+        document.getElementById('formColor').value = env.color || 'kraft';
+        document.getElementById('formPhoto').value = env.photoUrl || '';
+        document.getElementById('btnDeleteEnvelope').style.display = 'block';
+      } else {
+        document.getElementById('formModalTitle').innerText = 'Crea Nuova Busta';
+        document.getElementById('formEnvelopeId').value = '';
+        document.getElementById('btnDeleteEnvelope').style.display = 'none';
+      }
+
+      document.getElementById('formModal').classList.add('active');
+      syncBodyScroll();
+    }
+
+    function closeFormModal() {
+      document.getElementById('formModal').classList.remove('active');
+      syncBodyScroll();
+    }
+
+    document.getElementById('envelopeForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('formEnvelopeId').value;
+      const title = document.getElementById('formTitle').value.trim();
+      const content = document.getElementById('formContent').value.trim();
+      const linksRaw = document.getElementById('formLinks').value;
+      const color = document.getElementById('formColor').value;
+      const photoUrl = document.getElementById('formPhoto').value.trim();
+
+      const links = linksRaw.split(',').map(l => l.trim()).filter(l => l.length > 0);
+
+      if (!title || !content) {
+        alert('Compila almeno il titolo e il contenuto del messaggio.');
+        return;
+      }
+
+      if (id) {
+        const env = envelopes.find(e => e.id === id);
+        if (env) {
+          env.title = title;
+          env.content = content;
+          env.links = links;
+          env.color = color;
+          env.photoUrl = photoUrl;
+        }
+      } else {
+        const newEnv = {
+          id: 'env-' + Date.now(),
+          title,
+          content,
+          links,
+          color,
+          photoUrl,
+          isOpened: false
+        };
+        envelopes.push(newEnv);
+      }
+
+      saveEnvelopes();
+      render();
+      closeFormModal();
+      if (currentReadingId) closeReadModal();
+    });
+
+    document.getElementById('btnDeleteEnvelope').addEventListener('click', () => {
+      const id = document.getElementById('formEnvelopeId').value;
+      if (!id) return;
+
+      if (confirm('Sei sicuro di voler eliminare questa busta?')) {
+        envelopes = envelopes.filter(e => e.id !== id);
+        saveEnvelopes();
+        render();
+        closeFormModal();
+        if (currentReadingId) closeReadModal();
+      }
+    });
+
+    function triggerConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#D4AF37', '#C82D37', '#FAF6EE', '#E8C3BC', '#B4C4B1'];
+
+      for (let i = 0; i < 70; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.5) * 12 - 4,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          opacity: 1
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.2;
+          p.opacity -= 0.015;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        frame++;
+        if (frame < 80) requestAnimationFrame(animate);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animate();
+    }
+
+    function escapeHtml(text) {
+      return String(text == null ? '' : text).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    function normalizeLinkUrl(raw) {
+      const value = String(raw == null ? '' : raw).trim();
+      if (!value) return '';
+      if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+        // Solo schemi sicuri: niente javascript:, data: e simili
+        return /^(https?|mailto):/i.test(value) ? value : '';
+      }
+      if (value.startsWith('//')) return 'https:' + value;
+      // "www.sito.com" o "sito.com" diventano link validi
+      return 'https://' + value.replace(/^\/+/, '');
+    }
+
+    function normalizeImageUrl(raw) {
+      const value = String(raw == null ? '' : raw).trim();
+      if (!value) return '';
+      if (/^(https?:\/\/|data:image\/|\/\/|[./])/i.test(value)) return value;
+      if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return '';
+      const host = value.split('/')[0];
+      return host.includes('.') ? 'https://' + value : value;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadEnvelopes();
+
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        activeSearchQuery = e.target.value;
+        render();
+      });
+
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setFilter(btn.dataset.filter);
+        });
+      });
+
+      document.getElementById('btnCloseReadModal').addEventListener('click', closeReadModal);
+      document.getElementById('btnBackToOpened').addEventListener('click', closeReadModal);
+      document.getElementById('btnResealEnvelope').addEventListener('click', resealEnvelope);
+
+      document.getElementById('btnNewEnvelope').addEventListener('click', () => openFormModal());
+      document.getElementById('btnCloseFormModal').addEventListener('click', closeFormModal);
+      
+      document.getElementById('btnEditEnvelope').addEventListener('click', () => {
+        if (currentReadingId) openFormModal(currentReadingId);
+      });
+
+      // Chiudi cliccando sullo sfondo scuro
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target !== overlay) return;
+          if (overlay.id === 'readModal') closeReadModal();
+          else if (overlay.id === 'formModal') closeFormModal();
+        });
+      });
+
+      // Chiudi con il tasto Esc (prima il form, poi la lettera)
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('formModal').classList.contains('active')) {
+          closeFormModal();
+        } else if (document.getElementById('readModal').classList.contains('active')) {
+          closeReadModal();
+        }
+      });
+
+      document.getElementById('btnResetData').addEventListener('click', () => {
+        if (!confirm('Vuoi ripristinare le buste predefinite e resettare i salvataggi? Le modifiche attuali verranno sovrascritte.')) return;
+
+        envelopes = deepClone(DEFAULT_ENVELOPES);
+        activeSearchQuery = '';
+        activeFilter = 'all';
+        document.getElementById('searchInput').value = '';
+
+        document.getElementById('readModal').classList.remove('active');
+        document.getElementById('formModal').classList.remove('active');
+        currentReadingId = null;
+        document.getElementById('readModalContent').innerHTML = '';
+        syncBodyScroll();
+
+        saveEnvelopes();
+        setFilter('all');
+      });
+    });
+  </script>
+</body>
+</html>
