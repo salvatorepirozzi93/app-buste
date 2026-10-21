@@ -563,6 +563,173 @@
       transition: transform 0.18s ease;
     }
 
+    /* ===== BACKUP / RESTAURI (export & import JSON) ===== */
+    .backup-intro {
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: #4A3525;
+      margin-bottom: 18px;
+    }
+
+    .backup-intro strong {
+      color: #911821;
+    }
+
+    .backup-json {
+      width: 100%;
+      min-height: 130px;
+      max-height: 240px;
+      resize: vertical;
+      font-family: var(--font-typewriter);
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: #2C221E;
+      background: #FFFDF6;
+      border: 1px solid #D8BD9B;
+      border-radius: 6px;
+      padding: 12px;
+      word-break: break-all;
+    }
+
+    .backup-json:focus {
+      outline: none;
+      border-color: var(--gold-accent);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
+    }
+
+    .backup-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .backup-msg {
+      margin: 12px 0 0;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      min-height: 1.2em;
+      color: #911821;
+    }
+
+    .backup-msg.is-ok {
+      color: #3D6B45;
+    }
+
+    .backup-file-input {
+      display: none;
+    }
+
+    /* ===== ACCESSO E SINCRONIZZAZIONE ===== */
+    .login-sheet {
+      max-width: 460px;
+    }
+
+    .login-field {
+      margin-bottom: 14px;
+    }
+
+    .login-error {
+      margin: 12px 0 0;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: #911821;
+      min-height: 1.2em;
+    }
+
+    .login-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .login-row .action-btn,
+    .login-row .secondary-btn {
+      flex: 1 1 150px;
+      justify-content: center;
+    }
+
+    .login-link {
+      margin-top: 16px;
+      background: none;
+      border: none;
+      color: #8C7355;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 6px;
+    }
+
+    /* Stato della sincronizzazione nella barra in alto */
+    .sync-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: rgba(20, 10, 5, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      backdrop-filter: blur(8px);
+      color: #C2B09C;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .sync-chip i {
+      color: #8FA98A;
+      font-size: 0.85rem;
+    }
+
+    .sync-chip.is-saving i {
+      color: var(--gold-accent);
+    }
+
+    .sync-chip.is-offline i {
+      color: #8C7355;
+    }
+
+    .sync-chip button {
+      background: none;
+      border: none;
+      color: #8C7355;
+      cursor: pointer;
+      font-size: 0.75rem;
+      text-decoration: underline;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    /* Avviso temporaneo */
+    .toast-box {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20, 10, 5, 0.94);
+      color: #FAF6EE;
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      border-radius: 30px;
+      padding: 12px 24px;
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 3000;
+      max-width: 90vw;
+      text-align: center;
+    }
+
+    .toast-box.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     .warning-btn {
       background: transparent;
       border: 1px solid #911821;
@@ -1239,9 +1406,12 @@
       <button class="filter-btn" data-filter="opened" id="btnFilterOpened">Aperte (<span id="countOpened">0</span>)</button>
     </div>
 
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <button class="action-btn" id="btnNewEnvelope">
         <i class="fa-solid fa-plus"></i> Nuova Busta
+      </button>
+      <button class="secondary-btn" id="btnBackup" title="Salva o ripristina una copia delle buste" aria-label="Salva o ripristina una copia delle buste" style="color: #D8BD9B; border-color: rgba(212, 175, 55, 0.3);">
+        <i class="fa-solid fa-box-archive"></i>
       </button>
       <button class="secondary-btn" id="btnSoundToggle" title="Attiva o disattiva i suoni" aria-label="Attiva o disattiva i suoni" aria-pressed="false" style="color: #D8BD9B; border-color: rgba(212, 175, 55, 0.3);">
         <i class="fa-solid fa-volume-high" id="iconSound"></i>
@@ -1249,6 +1419,11 @@
       <button class="secondary-btn" id="btnResetData" title="Ripristina buste iniziali" aria-label="Ripristina buste iniziali" style="color: #D8BD9B; border-color: rgba(212, 175, 55, 0.3);">
         <i class="fa-solid fa-rotate-left"></i>
       </button>
+      <span class="sync-chip" id="syncChip" hidden>
+        <i class="fa-solid fa-cloud" id="syncIcon"></i>
+        <span id="syncText">Solo su questo dispositivo</span>
+        <button type="button" id="btnSignOut" hidden>Esci</button>
+      </span>
     </div>
   </div>
 
@@ -1373,9 +1548,108 @@
     </div>
   </div>
 
+  <!-- MODAL BACKUP: esporta / importa le buste in formato JSON -->
+  <div class="modal-overlay" id="backupModal">
+    <div class="letter-sheet" style="max-width: 620px;">
+      <button class="modal-close-btn" id="btnCloseBackupModal" aria-label="Chiudi">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="letter-header-subtitle">Copia di sicurezza</div>
+      <h2 class="letter-title">Salva o ripristina le buste</h2>
+
+      <p class="backup-intro">
+        Le tue buste sono salvate <strong>solo su questo dispositivo</strong>: nessun server, nessun account.
+        Usa <strong>Esporta</strong> per scaricare una copia da conservare (o da inviarmi),
+        e <strong>Importa</strong> per ripristinare le modifiche su un altro dispositivo.
+      </p>
+
+      <div class="backup-row">
+        <button type="button" class="action-btn" id="btnExportJson">
+          <i class="fa-solid fa-download"></i> Esporta
+        </button>
+        <button type="button" class="secondary-btn" id="btnImportJson">
+          <i class="fa-solid fa-upload"></i> Importa
+        </button>
+        <button type="button" class="secondary-btn" id="btnCopyJson" style="color: #5C4A3A;">
+          <i class="fa-solid fa-copy"></i> Copia
+        </button>
+      </div>
+
+      <input type="file" id="backupFileInput" class="backup-file-input" accept="application/json,.json">
+
+      <div style="margin-top: 18px;">
+        <label class="form-label" for="backupJsonText">Contenuto JSON (copia e incolla qui per importare)</label>
+        <textarea id="backupJsonText" class="backup-json" spellcheck="false" placeholder="Incolla qui il JSON delle tue buste e premi 'Importa'..."></textarea>
+      </div>
+
+      <p class="backup-msg" id="backupMsg" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN: sincronizzazione in tempo reale tra dispositivi -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="letter-sheet login-sheet">
+      <div class="letter-header-subtitle">Sincronizza</div>
+      <h2 class="letter-title">Accedi per vedere le tue buste su ogni dispositivo</h2>
+
+      <p class="backup-intro">
+        Con un account le modifiche si <strong>sincronizzano in tempo reale</strong>:
+        quello che scrivi sul telefono compare subito su computer e tablet, e viceversa.
+      </p>
+
+      <div class="login-field">
+        <label class="form-label" for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="tu@esempio.com" autocomplete="email" inputmode="email">
+      </div>
+
+      <div class="login-field">
+        <label class="form-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="Almeno 6 caratteri" autocomplete="current-password">
+      </div>
+
+      <div class="login-row">
+        <button type="button" class="action-btn" id="btnLogin">
+          <i class="fa-solid fa-right-to-bracket"></i> Accedi
+        </button>
+        <button type="button" class="secondary-btn" id="btnSignup">
+          <i class="fa-solid fa-user-plus"></i> Crea account
+        </button>
+      </div>
+
+      <p class="login-error" id="loginError" role="status" aria-live="polite"></p>
+
+      <button type="button" class="login-link" id="btnLoginSkip">
+        Continua senza account (solo su questo dispositivo)
+      </button>
+    </div>
+  </div>
+
+  <div class="toast-box" id="toastBox" role="status" aria-live="polite"></div>
+
   <canvas id="confettiCanvas" style="position: fixed; inset: 0; pointer-events: none; z-index: 2000;"></canvas>
 
   <script>
+    /* ============================================================
+       CONFIGURAZIONE FIREBASE (per la sincronizzazione in tempo reale)
+       ------------------------------------------------------------
+       Se questo oggetto è vuoto l'app funziona come prima, ma i dati
+       restano SOLO su questo dispositivo.
+       Per abilitare la sincronizzazione, incolla qui la configurazione
+       "firebaseConfig" che trovi in:
+         console.firebase.google.com -> Progetto -> Impostazioni generali -> Le tue app
+       I valori della configurazione Firebase sono pensati per essere pubblici:
+       la sicurezza dipende dalle Firestore Security Rules (vedi README).
+       ============================================================ */
+    const FIREBASE_CONFIG = {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
+
     const DEFAULT_ENVELOPES = [
       {
         id: "env-1",
@@ -1778,6 +2052,406 @@
 
     const soundEngine = new AcousticSoundEngine();
 
+    /* ============================================================
+       SINCRONIZZIONE IN TEMPO REALE (Firebase Firestore)
+       ------------------------------------------------------------
+       - Un documento per utente: /vaults/{uid}
+       - onSnapshot riceve le modifiche da tutti i dispositivi, subito
+       - Conflict resolution: timestamp del server (last-write-wins)
+       - Funziona anche offline: Firestore accoda e sincronizza al ritorno
+       - Se Firebase non è configurato, l'app resta come prima (solo locale)
+       ============================================================ */
+    const SYNC_COLLECTION = 'vaults';
+    const SYNC_SAVE_DEBOUNCE = 400;
+
+    const syncState = {
+      enabled: false,
+      ready: false,
+      user: null,
+      db: null,
+      auth: null,
+      unsubscribe: null,
+      saveTimer: null,
+      applyingRemote: false,
+      lastRemoteStamp: 0,
+      lastLocalStamp: 0,
+      onRemoteData: null,
+      onStatus: null
+    };
+
+    function firebaseConfigured() {
+      return !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
+    }
+
+    // Carica gli SDK di Firebase su richiesta (l'app resta leggera se non servono)
+    function loadFirebaseSdk() {
+      if (window.firebase) return Promise.resolve(window.firebase);
+      if (!firebaseConfigured()) return Promise.reject(new Error('Firebase non configurato'));
+
+      const base = 'https://www.gstatic.com/firebasejs/10.12.2';
+      const scripts = ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js'];
+
+      return scripts.reduce((chain, file) => chain.then(() => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[data-fb="${file}"]`)) return resolve();
+        const s = document.createElement('script');
+        s.src = `${base}/${file}`;
+        s.dataset.fb = file;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Impossibile caricare ' + file));
+        document.head.appendChild(s);
+      })), Promise.resolve()).then(() => window.firebase);
+    }
+
+    function syncStatus(state, label) {
+      if (typeof syncState.onStatus === 'function') syncState.onStatus(state, label);
+    }
+
+    // Carica (o crea) il documento dell'utente e resta in ascolto dei cambiamenti
+    function startSync(user, db) {
+      syncState.user = user;
+      syncState.db = db;
+
+      const docRef = db.collection(SYNC_COLLECTION).doc(user.uid);
+      let firstSnapshot = true;
+
+      // onSnapshot: push in tempo reale da tutti i dispositivi
+      syncState.unsubscribe = docRef.onSnapshot(async (snap) => {
+        if (!snap.exists()) {
+          // Prima volta: carichiamo i dati locali esistenti sul cloud
+          await pushToCloud(true);
+          firstSnapshot = false;
+          return;
+        }
+
+        const data = snap.data() || {};
+        const stamp = data.updatedAt || 0;
+
+        // Al primo contatto confrontiamo le due copie: vince la più recente.
+        // Così le modifiche fatte offline su un dispositivo non vengono perse.
+        if (firstSnapshot) {
+          firstSnapshot = false;
+          const localStamp = syncState.lastLocalStamp || 0;
+          if (localStamp > stamp && localStamp > 0) {
+            // La copia locale è più recente: la ripubblichiamo
+            await pushToCloud(true);
+            return;
+          }
+        }
+
+        // Ignora l'eco delle nostre stesse scritture
+        if (stamp <= syncState.lastRemoteStamp) return;
+        syncState.lastRemoteStamp = stamp;
+
+        const remote = Array.isArray(data.envelopes) ? data.envelopes : null;
+        if (!remote || !remote.length) return;
+
+        syncState.applyingRemote = true;
+        try {
+          if (typeof syncState.onRemoteData === 'function') {
+            syncState.onRemoteData(remote, stamp);
+          }
+        } finally {
+          syncState.applyingRemote = false;
+        }
+      }, (err) => {
+        console.warn('Sync non disponibile:', err);
+        syncStatus('offline', 'Solo su questo dispositivo');
+      });
+    }
+
+    function stopSync() {
+      if (syncState.unsubscribe) {
+        try { syncState.unsubscribe(); } catch (err) { /* già chiuso */ }
+        syncState.unsubscribe = null;
+      }
+      if (syncState.saveTimer) {
+        clearTimeout(syncState.saveTimer);
+        syncState.saveTimer = null;
+      }
+    }
+
+    // Scrive i dati locali sul cloud (con debounce per non scrivere a ogni keystroke)
+    function pushToCloud(immediate) {
+      if (!syncState.enabled || !syncState.db || !syncState.user) return;
+      if (syncState.applyingRemote) return;
+
+      const send = () => {
+        syncState.saveTimer = null;
+        const docRef = syncState.db.collection(SYNC_COLLECTION).doc(syncState.user.uid);
+        docRef.set({
+          envelopes: envelopes,
+          // Il timestamp locale è più affidabile di Date.now(): i clock dei
+          // dispositivi possono essere sbagliati o scollegati.
+          updatedAt: Math.max(Date.now(), syncState.lastLocalStamp || 0),
+          updatedBy: syncState.user.uid
+        }, { merge: true }).catch((err) => {
+          console.warn('Salvataggio su cloud non riuscito:', err);
+          syncStatus('offline', 'Salvataggio in locale');
+        });
+      };
+
+      if (syncState.saveTimer) clearTimeout(syncState.saveTimer);
+      if (immediate) send();
+      else syncState.saveTimer = setTimeout(send, SYNC_SAVE_DEBOUNCE);
+    }
+
+    async function initFirebase() {
+      if (!firebaseConfigured()) {
+        syncStatus('offline', 'Solo su questo dispositivo');
+        return false;
+      }
+
+      try {
+        const fb = await loadFirebaseSdk();
+        if (!fb.apps.length) fb.initializeApp(FIREBASE_CONFIG);
+
+        const auth = fb.auth();
+        const db = fb.firestore();
+
+        // Firestore con persistenza offline: le modifiche partono al ritorno della rete
+        try { db.enablePersistence({ synchronizeTabs: true }); } catch (err) { /* non supportato */ }
+
+        syncState.auth = auth;
+        syncState.db = db;
+        syncState.enabled = true;
+
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            syncState.lastRemoteStamp = 0;
+            startSync(user, db);
+            syncStatus('synced', 'Sincronizzato');
+          } else {
+            stopSync();
+            syncState.user = null;
+          }
+        });
+
+        return true;
+      } catch (err) {
+        console.warn('Firebase non disponibile:', err);
+        syncState.enabled = false;
+        syncStatus('offline', 'Solo su questo dispositivo');
+        return false;
+      }
+    }
+
+    async function firebaseSignIn(email, password) {
+      if (!syncState.auth) throw new Error('Firebase non pronto');
+      await syncState.auth.signInWithEmailAndPassword(email, password);
+    }
+
+    async function firebaseSignUp(email, password) {
+      if (!syncState.auth) throw new Error('Firebase non pronto');
+      await syncState.auth.createUserWithEmailAndPassword(email, password);
+    }
+
+    async function firebaseSignOut() {
+      if (!syncState.auth) return;
+      stopSync();
+      await syncState.auth.signOut();
+    }
+
+    /* ---------- Avviso temporaneo ---------- */
+    let toastTimer = null;
+    function showToast(message, ms) {
+      const box = document.getElementById('toastBox');
+      if (!box) return;
+      box.textContent = message;
+      box.classList.add('is-visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => box.classList.remove('is-visible'), ms || 2600);
+    }
+
+    /* ---------- Badge di stato della sincronizzazione ---------- */
+    function renderSyncChip(state, label) {
+      const chip = document.getElementById('syncChip');
+      const icon = document.getElementById('syncIcon');
+      const text = document.getElementById('syncText');
+      const signOut = document.getElementById('btnSignOut');
+      if (!chip || !icon || !text) return;
+
+      if (!state || state === 'offline') {
+        chip.hidden = false;
+        chip.className = 'sync-chip is-offline';
+        icon.className = 'fa-solid fa-cloud-arrow-down';
+        text.textContent = label || 'Solo su questo dispositivo';
+        if (signOut) signOut.hidden = true;
+        return;
+      }
+
+      chip.hidden = false;
+      chip.className = 'sync-chip' + (state === 'saving' ? ' is-saving' : '');
+      icon.className = state === 'saving' ? 'fa-solid fa-cloud-arrow-up' : 'fa-solid fa-cloud';
+      text.textContent = label || 'Sincronizzato';
+      if (signOut) signOut.hidden = false;
+    }
+
+    /* ---------- Login ---------- */
+    function openLoginModal() {
+      const modal = document.getElementById('loginModal');
+      if (!modal) return;
+      modal.classList.add('active');
+      syncBodyScroll();
+    }
+
+    function closeLoginModal() {
+      const modal = document.getElementById('loginModal');
+      if (!modal) return;
+      modal.classList.remove('active');
+      syncBodyScroll();
+    }
+
+    function showLoginError(message) {
+      const el = document.getElementById('loginError');
+      if (el) el.textContent = message || '';
+    }
+
+    function firebaseErrorMessage(err) {
+      const code = (err && err.code) || '';
+      if (code === 'auth/invalid-email') return 'Questa email non sembra valida.';
+      if (code === 'auth/missing-password') return 'Inserisci la password.';
+      if (code === 'auth/weak-password') return 'La password deve avere almeno 6 caratteri.';
+      if (code === 'auth/email-already-in-use') return 'Esiste già un account con questa email.';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') return 'Email o password non corretti.';
+      if (code === 'auth/too-many-requests') return 'Troppi tentativi. Riprova tra un po\'.';
+      if (code === 'auth/network-request-failed') return 'Connessione assente. Serve internet per l\'accesso.';
+      return (err && err.message) ? err.message : 'Accesso non riuscito.';
+    }
+
+    async function handleLogin(signUp) {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      showLoginError('');
+
+      if (!email || !password) {
+        showLoginError('Inserisci email e password.');
+        return;
+      }
+      if (signUp && password.length < 6) {
+        showLoginError('La password deve avere almeno 6 caratteri.');
+        return;
+      }
+
+      const btnLogin = document.getElementById('btnLogin');
+      const btnSignup = document.getElementById('btnSignup');
+      const original = btnLogin.innerHTML;
+      btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Attendi…';
+      btnLogin.disabled = true;
+      btnSignup.disabled = true;
+
+      try {
+        if (signUp) await firebaseSignUp(email, password);
+        else await firebaseSignIn(email, password);
+        closeLoginModal();
+        document.getElementById('loginPassword').value = '';
+        showToast(signUp ? 'Account creato. Sincronizzazione attiva!' : 'Bentornato! Sincronizzazione attiva.', 3200);
+      } catch (err) {
+        console.warn('Accesso non riuscito:', err);
+        showLoginError(firebaseErrorMessage(err));
+      } finally {
+        btnLogin.innerHTML = original;
+        btnLogin.disabled = false;
+        btnSignup.disabled = false;
+      }
+    }
+
+    /* ---------- Backup: esporta / importa JSON ---------- */
+    function exportEnvelopes() {
+      const payload = {
+        app: 'caja-de-totri',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        envelopes: envelopes
+      };
+
+      const json = JSON.stringify(payload, null, 2);
+      const area = document.getElementById('backupJsonText');
+      if (area) area.value = json;
+
+      // Scarica il file (funziona su desktop e su iPhone)
+      try {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'buste-caja-totri.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showBackupMessage('Copia scaricata. Puoi inviarmela per metterla nell\'app.', true);
+      } catch (err) {
+        showBackupMessage('Copia pronta qui sotto: seleziona il testo e copialo.', true);
+      }
+    }
+
+    function showBackupMessage(message, ok) {
+      const el = document.getElementById('backupMsg');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.toggle('is-ok', !!ok);
+    }
+
+    function openBackupModal() {
+      const modal = document.getElementById('backupModal');
+      if (!modal) return;
+      showBackupMessage('', true);
+      modal.classList.add('active');
+      syncBodyScroll();
+    }
+
+    function closeBackupModal() {
+      const modal = document.getElementById('backupModal');
+      if (!modal) return;
+      modal.classList.remove('active');
+      syncBodyScroll();
+    }
+
+    function importEnvelopes(jsonText) {
+      const raw = (jsonText || '').trim();
+      if (!raw) {
+        showBackupMessage('Incolla prima il JSON delle buste.', false);
+        return;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (err) {
+        showBackupMessage('Il JSON non è valido. Controlla di averlo copiato per intero.', false);
+        return;
+      }
+
+      // Accetta sia il formato completo sia l'array di buste grezza
+      const list = Array.isArray(parsed) ? parsed : parsed.envelopes;
+      if (!Array.isArray(list) || !list.length) {
+        showBackupMessage('Non ho trovato nessuna busta nel file.', false);
+        return;
+      }
+
+      const valid = list
+        .filter(env => env && typeof env === 'object' && typeof env.id === 'string' && typeof env.title === 'string')
+        .map(env => ({
+          ...env,
+          content: typeof env.content === 'string' ? env.content : '',
+          color: env.color || 'kraft',
+          isOpened: Boolean(env.isOpened),
+          links: Array.isArray(env.links) ? env.links.filter(l => typeof l === 'string') : [],
+          photoUrl: typeof env.photoUrl === 'string' ? env.photoUrl : ''
+        }));
+
+      if (!valid.length) {
+        showBackupMessage('Il file non contiene buste valide.', false);
+        return;
+      }
+
+      envelopes = valid;
+      saveEnvelopes();
+      render();
+      showBackupMessage('Importate ' + valid.length + ' buste.', true);
+      showToast('Buste importate correttamente.');
+    }
+
     // Tiene allineata l'icona del pulsante audio con lo stato reale
     function updateSoundButton() {
       const btn = document.getElementById('btnSoundToggle');
@@ -1940,6 +2614,14 @@
         loaded = null;
       }
 
+      // Timestamp dell'ultima modifica locale: permette di capire al prossimo
+      // avvio se la copia locale è più recente di quella sul cloud.
+      try {
+        syncState.lastLocalStamp = parseInt(localStorage.getItem(STORAGE_KEY + '_ts') || '0', 10) || 0;
+      } catch (err) {
+        syncState.lastLocalStamp = 0;
+      }
+
       if (Array.isArray(loaded)) {
         envelopes = loaded
           .filter(env => env && typeof env === 'object' && typeof env.id === 'string' && typeof env.title === 'string')
@@ -1963,23 +2645,49 @@
             .trim();
           migrated = true;
         });
-        if (migrated) saveEnvelopes();
+        if (migrated) writeLocalOnly();
       } else {
         envelopes = deepClone(DEFAULT_ENVELOPES);
-        saveEnvelopes();
+        // Solo in locale: i dati predefiniti non devono essere pubblicati sul
+        // cloud, altrimenti un dispositivo appena aperto sovrascriverebbe
+        // le buste già salvate da un altro dispositivo.
+        writeLocalOnly();
       }
 
       render();
     }
 
-    function saveEnvelopes() {
+    // Salva SOLO in locale, senza toccare il timestamp delle modifiche.
+    // Usato durante il caricamento iniziale: i dati predefiniti non devono
+    // sembrare "più recenti" del cloud, altrimenti un dispositivo nuovo
+    // sovrascriverebbe i dati già salvati da un altro dispositivo.
+    function writeLocalOnly() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(envelopes));
       } catch (err) {
-        // Safari in navigazione privata o quota piena: l'app resta usabile in memoria
         console.warn('Impossibile salvare le buste nel browser.', err);
       }
       updateCounts();
+    }
+
+    function saveEnvelopes() {
+      writeLocalOnly();
+
+      // Propaga al cloud: le modifiche arrivano subito agli altri dispositivi.
+      // Non lo facciamo mentre applichiamo dati remoti, per non rimandare indietro
+      // quello che è appena arrivato.
+      if (syncState.applyingRemote) return;
+
+      // Timestamp locale: serve a capire, al prossimo avvio, se la copia
+      // locale è più recente di quella sul cloud (modifiche fatte offline).
+      syncState.lastLocalStamp = Date.now();
+      try {
+        localStorage.setItem(STORAGE_KEY + '_ts', String(syncState.lastLocalStamp));
+      } catch (err) {
+        /* il timestamp è un extra: se non si salva, il confronto userà 0 */
+      }
+
+      pushToCloud(false);
     }
 
     function updateCounts() {
@@ -2387,6 +3095,33 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadEnvelopes();
 
+      // --- Sincronizzazione in tempo reale ---
+      // Il badge mostra sempre lo stato: "Solo su questo dispositivo" se non
+      // c'è un account, "Sincronizzato" quando il cloud è collegato.
+      syncState.onStatus = renderSyncChip;
+
+      // Quando arrivano dati da un altro dispositivo, li applichiamo e ridisegniamo
+      syncState.onRemoteData = (remote, stamp) => {
+        envelopes = remote;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(envelopes));
+          // Allineiamo il timestamp locale a quello remoto: ora le due copie coincidono
+          if (stamp) {
+            syncState.lastLocalStamp = stamp;
+            localStorage.setItem(STORAGE_KEY + '_ts', String(stamp));
+          }
+        } catch (err) {
+          /* memoria locale non disponibile: i dati restano comunque nel cloud */
+        }
+        render();
+        showToast('Buste aggiornate da un altro dispositivo.');
+      };
+
+      renderSyncChip('offline', 'Solo su questo dispositivo');
+      initFirebase().then((ok) => {
+        if (ok && !syncState.user) openLoginModal();
+      });
+
       // --- Sblocco audio (iOS/Safari) ---
       // Safari mobile crea l'AudioContext in stato "suspended" e lo riprende
       // SOLO dentro un gesto utente reale. Il primo tocco su un qualsiasi
@@ -2451,12 +3186,61 @@
         if (currentReadingId) openFormModal(currentReadingId);
       });
 
+      // --- Login / account ---
+      document.getElementById('btnLogin').addEventListener('click', () => handleLogin(false));
+      document.getElementById('btnSignup').addEventListener('click', () => handleLogin(true));
+      document.getElementById('btnCloseBackupModal').addEventListener('click', closeBackupModal);
+      document.getElementById('btnLoginSkip').addEventListener('click', () => {
+        closeLoginModal();
+        showToast('Ok: i dati restano solo su questo dispositivo.');
+      });
+      document.getElementById('btnSignOut').addEventListener('click', async () => {
+        await firebaseSignOut();
+        renderSyncChip('offline', 'Solo su questo dispositivo');
+        showToast('Sei uscito dall\'account. I dati restano su questo dispositivo.');
+      });
+
+      // --- Backup / ripristino ---
+      document.getElementById('btnBackup').addEventListener('click', openBackupModal);
+      document.getElementById('btnExportJson').addEventListener('click', exportEnvelopes);
+      document.getElementById('btnCopyJson').addEventListener('click', async () => {
+        const area = document.getElementById('backupJsonText');
+        if (!area.value) {
+          showBackupMessage('Prima premi "Esporta".', false);
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(area.value);
+          showBackupMessage('Copiato negli appunti.', true);
+        } catch (err) {
+          area.select();
+          showBackupMessage('Seleziona e copia il testo qui sotto.', true);
+        }
+      });
+      document.getElementById('btnImportJson').addEventListener('click', () => {
+        const fileInput = document.getElementById('backupFileInput');
+        if (fileInput) fileInput.click();
+      });
+      document.getElementById('backupFileInput').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          importEnvelopes(String(reader.result || ''));
+          e.target.value = '';
+        };
+        reader.onerror = () => showBackupMessage('Impossibile leggere il file.', false);
+        reader.readAsText(file);
+      });
+
       // Chiudi cliccando sullo sfondo scuro
       document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
           if (e.target !== overlay) return;
           if (overlay.id === 'readModal') closeReadModal();
           else if (overlay.id === 'formModal') closeFormModal();
+          else if (overlay.id === 'backupModal') closeBackupModal();
+          else if (overlay.id === 'loginModal') closeLoginModal();
         });
       });
 
@@ -2465,6 +3249,8 @@
         if (e.key !== 'Escape') return;
         if (document.getElementById('formModal').classList.contains('active')) {
           closeFormModal();
+        } else if (document.getElementById('backupModal').classList.contains('active')) {
+          closeBackupModal();
         } else if (document.getElementById('readModal').classList.contains('active')) {
           closeReadModal();
         }
