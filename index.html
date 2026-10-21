@@ -77,6 +77,7 @@
       font-size: clamp(1.2rem, 3vw, 1.8rem);
       color: #D8BD9B;
       opacity: 0.9;
+      display: none;
     }
 
     .desk-toolbar {
@@ -554,6 +555,12 @@
     .secondary-btn:hover {
       background: #E8DCC8;
       color: #2A1A10;
+    }
+
+    /* Lampeggio dell'icona audio: conferma che il suono è stato emesso */
+    #iconSound {
+      display: inline-block;
+      transition: transform 0.18s ease;
     }
 
     .warning-btn {
@@ -1220,7 +1227,6 @@
 
   <header>
     <h1 class="app-title">La caja de ToTri</h1>
-    <p class="app-subtitle">Istruzioni per i momenti speciali della vita</p>
   </header>
 
   <div class="desk-toolbar">
@@ -1236,6 +1242,9 @@
     <div style="display: flex; gap: 10px;">
       <button class="action-btn" id="btnNewEnvelope">
         <i class="fa-solid fa-plus"></i> Nuova Busta
+      </button>
+      <button class="secondary-btn" id="btnSoundToggle" title="Attiva o disattiva i suoni" aria-label="Attiva o disattiva i suoni" aria-pressed="false" style="color: #D8BD9B; border-color: rgba(212, 175, 55, 0.3);">
+        <i class="fa-solid fa-volume-high" id="iconSound"></i>
       </button>
       <button class="secondary-btn" id="btnResetData" title="Ripristina buste iniziali" aria-label="Ripristina buste iniziali" style="color: #D8BD9B; border-color: rgba(212, 175, 55, 0.3);">
         <i class="fa-solid fa-rotate-left"></i>
@@ -1480,141 +1489,322 @@
     class AcousticSoundEngine {
       constructor() {
         this.ctx = null;
+        this.master = null;
+        this.unlocked = false;
+        this.muted = false;
+        this.volume = 1;
+        // Suoni in attesa: su iOS un suono emesso fuori da un gesto
+        // viene rimandato finché l'utente non tocca la pagina.
+        this.pending = [];
       }
 
-      init() {
-        if (!this.ctx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (!AudioCtx) return;
+      getContext() {
+        if (this.ctx) return this.ctx;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        try {
+          this.ctx = new AudioCtx();
+        } catch (err) {
+          this.ctx = null;
+          return null;
+        }
+
+        // Bus principale: un unico punto per volume e muto
+        try {
+          this.master = this.ctx.createGain();
+          this.master.gain.value = this.muted ? 0 : this.volume;
+          this.master.connect(this.ctx.destination);
+        } catch (err) {
+          this.master = null;
+        }
+
+        return this.ctx;
+      }
+
+      // Da chiamare dentro un gesto utente reale (tap/clic/tasto).
+      // Su iOS il contesto nasce "suspended": senza questo resume resta muto per sempre.
+      unlock() {
+        const ctx = this.getContext();
+        if (!ctx) return;
+
+        if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+          ctx.resume().then(() => {
+            this.prime();
+            this.flushPending();
+          }).catch(() => {});
+          return;
+        }
+        if (ctx.state === 'running') {
+          this.prime();
+          this.flushPending();
+        }
+      }
+
+      // "Scalda" l'uscita audio di iOS con un buffer silenzioso:
+      // senza questo, il primo suono può restare muto anche con il contesto attivo.
+      prime() {
+        const ctx = this.ctx;
+        if (!ctx || this.unlocked || ctx.state !== 'running') return;
+        this.unlocked = true;
+        try {
+          const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          src.connect(ctx.destination);
+          src.start(0);
+        } catch (err) {
+          /* il priming è un extra: se fallisce si prosegue comunque */
+        }
+      }
+
+      // Riproduce i suoni rimasti in attesa appena il contesto è attivo
+      flushPending() {
+        if (!this.pending.length) return;
+        const ctx = this.ctx;
+        if (!ctx || ctx.state !== 'running') return;
+        const queue = this.pending;
+        this.pending = [];
+        queue.forEach(fn => {
           try {
-            this.ctx = new AudioCtx();
+            fn(ctx, ctx.currentTime, this.master);
           } catch (err) {
-            this.ctx = null;
-            return;
+            /* un suono non deve mai bloccare l'app */
+          }
+        });
+      }
+
+      // Esegue fn(ctx, now) solo quando il contesto è attivo.
+      // Se è sospeso, il suono viene rimandato al prossimo sblocco invece di essere perso.
+      play(fn) {
+        const ctx = this.getContext();
+        if (!ctx) return;
+
+        const exec = () => {
+          if (ctx.state === 'closed') return;
+          try {
+            fn(ctx, ctx.currentTime, this.master);
+            pulseSoundButton();
+          } catch (err) {
+            /* un suono non deve mai bloccare l'app */
+          }
+        };
+
+        if (ctx.state === 'running') {
+          exec();
+          return;
+        }
+
+        // Suono emesso fuori da un gesto (es. fine animazione): resta in attesa
+        this.pending.push(fn);
+
+        if (typeof ctx.resume === 'function') {
+          ctx.resume().then(() => {
+            this.flushPending();
+          }).catch(() => {});
+        }
+      }
+
+      setMuted(muted) {
+        this.muted = muted;
+        const ctx = this.ctx;
+        if (ctx && this.master) {
+          const target = muted ? 0 : this.volume;
+          try {
+            // Rampa breve: silenzia subito (30 ms, nessun "click") e raggiunge
+            // esattamente il valore desiderato.
+            const g = this.master.gain;
+            if (typeof g.cancelScheduledValues === 'function') {
+              g.cancelScheduledValues(ctx.currentTime);
+            }
+            g.setValueAtTime(g.value, ctx.currentTime);
+            g.linearRampToValueAtTime(target, ctx.currentTime + 0.03);
+          } catch (err) {
+            this.master.gain.value = target;
           }
         }
-        // Su iOS/Safari il contesto può restare sospeso finché non viene ripreso da un gesto utente
-        if (this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
-          this.ctx.resume().catch(() => {});
-        }
+      }
+
+      toggleMuted() {
+        this.setMuted(!this.muted);
+        return this.muted;
       }
 
       playOpen() {
-        this.init();
-        if (!this.ctx || this.ctx.state === 'closed') return;
+        this.play((ctx, now, out) => {
+          const bufferSize = ctx.sampleRate * 0.25;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
 
-        const now = this.ctx.currentTime;
-        const bufferSize = this.ctx.sampleRate * 0.25;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
-        }
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
 
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(400, now);
+          filter.frequency.exponentialRampToValueAtTime(1800, now + 0.2);
+          filter.Q.value = 0.9;
 
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(400, now);
-        filter.frequency.exponentialRampToValueAtTime(1800, now + 0.2);
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.9, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
 
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(out || ctx.destination);
 
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        noise.start(now);
+          noise.start(now);
+        });
       }
 
       playClose() {
-        this.init();
-        if (!this.ctx || this.ctx.state === 'closed') return;
+        this.play((ctx, now, out) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
 
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+          gain.gain.setValueAtTime(0.45, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.connect(gain);
+          gain.connect(out || ctx.destination);
 
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.16);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        });
       }
 
       // Tintinnio metallico della moneta che gira
       playCoinSpin() {
-        this.init();
-        if (!this.ctx || this.ctx.state === 'closed') return;
+        this.play((ctx, now, out) => {
+          const bufferSize = ctx.sampleRate * 0.5;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
 
-        const now = this.ctx.currentTime;
-        const bufferSize = this.ctx.sampleRate * 0.5;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
-        }
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
 
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
+          // Passa-banda centrato dove l'altoparlante del telefono è più sensibile
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(900, now);
+          filter.frequency.exponentialRampToValueAtTime(3400, now + 0.42);
+          filter.Q.value = 1.6;
 
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(700, now);
-        filter.frequency.exponentialRampToValueAtTime(3200, now + 0.42);
-        filter.Q.value = 2.2;
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.55, now + 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
 
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.1, now + 0.07);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(out || ctx.destination);
 
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.ctx.destination);
+          noise.start(now);
 
-        noise.start(now);
+          // Armonici metallici: danno il "tink" al suono, udibile anche su speaker piccoli
+          [2100, 3150, 4700].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+            g.gain.setValueAtTime(0.0001, now);
+            g.gain.exponentialRampToValueAtTime(0.07 / (i + 1), now + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3 - i * 0.06);
+            osc.connect(g);
+            g.connect(out || ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+          });
+        });
       }
 
-      // Nota finale: testa e croce hanno due timbri diversi
+      // Nota finale: testa e croce hanno due timbri diversi.
+      // Frequenze scelte nella zona 800-4000 Hz, la più udibile sugli speaker del telefono.
       playCoinResult(isHeads) {
-        this.init();
-        if (!this.ctx || this.ctx.state === 'closed') return;
+        this.play((ctx, now, out) => {
+          const base = isHeads ? 1046 : 784;
 
-        const now = this.ctx.currentTime;
-        const base = isHeads ? 880 : 587;
+          [[1, 0.3], [1.5, 0.2], [2, 0.12]].forEach((pair) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
 
-        [1, 1.5].forEach((mult, i) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(base * pair[0], now);
 
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(base * mult, now);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(pair[1], now + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
 
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.exponentialRampToValueAtTime(0.12 / (i + 1), now + 0.012);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+            osc.connect(gain);
+            gain.connect(out || ctx.destination);
 
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.65);
+          });
 
-          osc.start(now);
-          osc.stop(now + 0.6);
+          // Attacco metallico: rende il risultato immediatamente percepibile
+          const bufferSize = Math.floor(ctx.sampleRate * 0.08);
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+          }
+
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          const hp = ctx.createBiquadFilter();
+          hp.type = 'highpass';
+          hp.frequency.value = 1800;
+          const ng = ctx.createGain();
+          ng.gain.setValueAtTime(0.45, now);
+          ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+          noise.connect(hp);
+          hp.connect(ng);
+          ng.connect(out || ctx.destination);
+          noise.start(now);
         });
       }
     }
 
     const soundEngine = new AcousticSoundEngine();
+
+    // Tiene allineata l'icona del pulsante audio con lo stato reale
+    function updateSoundButton() {
+      const btn = document.getElementById('btnSoundToggle');
+      const icon = document.getElementById('iconSound');
+      if (!btn || !icon) return;
+
+      const muted = soundEngine.muted;
+      icon.className = muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+      btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+      btn.setAttribute('aria-label', muted ? 'Attiva i suoni' : 'Disattiva i suoni');
+      btn.title = muted ? 'Attiva i suoni' : 'Disattiva i suoni';
+      btn.style.color = muted ? '#8C7355' : '#D8BD9B';
+    }
+
+    // Lampeggio breve dell'icona: conferma visiva che il suono è stato emesso.
+    // Utile su iPhone, dove si potrebbe pensare che l'app sia muta.
+    let soundPulseTimer = null;
+    function pulseSoundButton() {
+      const icon = document.getElementById('iconSound');
+      if (!icon) return;
+      icon.style.transform = 'scale(1.35)';
+      clearTimeout(soundPulseTimer);
+      soundPulseTimer = setTimeout(() => {
+        icon.style.transition = 'transform 0.35s ease';
+        icon.style.transform = 'scale(1)';
+      }, 90);
+    }
 
     /* ============================================================
        MONETA "TESTA O CROCE"
@@ -2197,6 +2387,36 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadEnvelopes();
 
+      // --- Sblocco audio (iOS/Safari) ---
+      // Safari mobile crea l'AudioContext in stato "suspended" e lo riprende
+      // SOLO dentro un gesto utente reale. Il primo tocco su un qualsiasi
+      // elemento sblocca l'audio per tutta la sessione.
+      const unlockAudio = () => {
+        soundEngine.unlock();
+      };
+
+      ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(evt => {
+        document.addEventListener(evt, unlockAudio, { passive: true, capture: true });
+      });
+
+      // iOS sospende il contesto quando la scheda va in background:
+      // al rientro va ripreso, altrimenti l'app resta muta.
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) soundEngine.unlock();
+      });
+      window.addEventListener('pageshow', () => soundEngine.unlock());
+      window.addEventListener('focus', () => soundEngine.unlock());
+
+      // Ripristina la preferenza "suono spento"
+      try {
+        if (localStorage.getItem('caja_totri_muted') === '1') {
+          soundEngine.setMuted(true);
+        }
+      } catch (err) {
+        /* preferenza non disponibile: nessun problema */
+      }
+      updateSoundButton();
+
       document.getElementById('searchInput').addEventListener('input', (e) => {
         activeSearchQuery = e.target.value;
         render();
@@ -2214,6 +2434,18 @@
 
       document.getElementById('btnNewEnvelope').addEventListener('click', () => openFormModal());
       document.getElementById('btnCloseFormModal').addEventListener('click', closeFormModal);
+
+      document.getElementById('btnSoundToggle').addEventListener('click', () => {
+        const muted = soundEngine.toggleMuted();
+        try {
+          localStorage.setItem('caja_totri_muted', muted ? '1' : '0');
+        } catch (err) {
+          /* preferenza non salvabile: il mute resta valido per la sessione */
+        }
+        updateSoundButton();
+        // Un tocco sul pulsante riattiva l'audio: utile per sbloccare iOS
+        soundEngine.unlock();
+      });
       
       document.getElementById('btnEditEnvelope').addEventListener('click', () => {
         if (currentReadingId) openFormModal(currentReadingId);
