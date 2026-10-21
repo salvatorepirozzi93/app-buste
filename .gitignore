@@ -2,3 +2,5 @@
 Thumbs.db
 *.log
 devserver.pl
+firebase-mock.js
+index-test*.html
