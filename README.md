@@ -29,45 +29,60 @@ Per ripubblicare dopo una modifica:
 
 # Sincronizzazione in tempo reale (Firebase)
 
-L'app funziona **subito** senza configurazione: i dati vengono salvati nel
-`localStorage` del browser, quindi restano **solo su quel dispositivo**.
+✅ **Attiva.** Il progetto Firebase `caja-de-totri` è già creato e configurato:
 
-Per avere gli stessi dati su telefono, computer e tablet in tempo reale serve
-un piccolo setup su Firebase (gratis, ~10 minuti, una volta sola).
+| Cosa | Stato |
+|---|---|
+| Progetto Firebase | `caja-de-totri` |
+| Database Firestore | creato (regione `nam5`) |
+| App Web | "App Buste" (config già in `index.html`) |
+| Accesso | **Accedi con Google** (gratuito, niente carta di credito) |
+| Domini autorizzati | `salvatorepirozzi93.github.io` |
+| Regole di sicurezza | pubblicate (ogni utente vede solo le sue buste) |
 
-## 1. Crea il progetto Firebase
+L'accesso avviene con un popup Google: su iPhone viene usato il reindirizzamento
+(più affidabile su Safari mobile).
 
-1. Apri <https://console.firebase.google.com> e accedi con Google
-2. **Add project** → dai un nome (es. `caja-de-totri`) → continua
-3. **Build → Firestore Database** → **Create database**
-   - modalità *Production mode*
-   - location: scegli quello più vicino (es. `europe-west1`)
-4. **Build → Authentication** → *Get started* → attiva **Email/Password**
-   (nella sezione *Sign-in method*)
-5. **Project settings** (icona ingranaggio) → **Your apps** → icona `</>` (Web)
-   → registra l'app → **copia il blocco `firebaseConfig`**
+## Come funziona per l'utente
 
-## 2. Incolla la configurazione
+1. Apri la app → compare "Accedi con Google"
+2. Scegli l'account → le buste si sincronizzano **in tempo reale** su tutti i
+   dispositivi (telefono, computer, tablet)
+3. Il badge in alto a destra mostra lo stato: "Sincronizzato" / "Solo su questo dispositivo"
+4. "Esci" ti riporta alla modalità solo-locale
 
-Incolla il blocco copiato in `index.html`, all'inizio dello `<script>`:
+Nessun account → l'app funziona comunque, ma i dati restano solo su quel
+dispositivo (e "Continua senza account" lo dice).
 
-```js
-const FIREBASE_CONFIG = {
-  apiKey: "AIza...",
-  authDomain: "caja-de-totri.firebaseapp.com",
-  projectId: "caja-de-totri",
-  storageBucket: "caja-de-totri.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abc123"
-};
-```
+## Note tecniche
 
-> I valori di `firebaseConfig` **sono pensati per essere pubblici**: chiunque
-> può leggerli. La sicurezza dei dati dipende dalle regole Firestore (punto 3).
+- **Regole Firestore** (già pubblicate): ogni utente può leggere/scrivere
+  **solo** il proprio documento `vaults/{uid}`.
+- **Offline**: Firestore accoda le scritture e le sincronizza al ritorno della rete.
+- **Conflitti**: last-write-wins sul timestamp; le modifiche fatte offline non
+  vengono perse (viene confrontato il timestamp locale con quello del cloud).
+- **Persistenza locale**: `localStorage` come cache, così l'app apre subito
+  anche senza rete.
+- La configurazione `firebaseConfig` in `index.html` **è pensata per essere
+  pubblica**: la sicurezza dipende dalle regole Firestore, non dalla API key.
 
-## 3. Regole di sicurezza Firestore
+## Se un giorno vuoi rifare il setup
 
-**Firestore → Rules** → incolla e pubblica:
+<details>
+<summary>Procedura completa</summary>
+
+1. <https://console.firebase.google.com> → **Add project**
+2. **Build → Firestore Database** → **Create database** (Production mode)
+3. **Build → Authentication** → attiva il provider **Google**
+   (l'Email/Password richiede il piano Blaze a pagamento: non serve qui)
+4. **Impostazioni progetto → Le tue app** → icona `</>` (Web) → registra l'app
+   → **Usa un tag `<script>`** → copia `firebaseConfig` nel blocco
+   `FIREBASE_CONFIG` in `index.html`
+5. **Authentication → Impostazioni → Domini autorizzati** → aggiungi il tuo dominio
+   (es. `salvatorepirozzi93.github.io`)
+6. **Authentication → Metodo di accesso** → imposta l'email di assistenza
+   (obbligatoria per attivare Google) e clicca **Salva**
+7. **Firestore → Regole** → incolla le regole qui sotto e clicca **Pubblica**:
 
 ```
 rules_version = '2';
@@ -80,11 +95,9 @@ service cloud.firestore {
 }
 ```
 
-Così ogni utente vede e modifica **solo le proprie** buste.
+</details>
 
-## 4. Pubblica
 
-```bash
 ./deploy.sh
 ```
 
@@ -118,8 +131,10 @@ Indipendentemente dalla sincronizzazione, il pulsante 📦 in alto a destra perm
 
 - Per modificare e ripubblicare: modifica `index.html`, poi `./deploy.sh`.
   GitHub Pages ricostruisce il sito in automatico (30–60 secondi).
-- I dati salvati sono locali al browser/dispositivo: cancellare i dati di navigazione
-  li perde. Se attivi la sincronizzazione, i dati restano anche nel cloud.
+- Con la sincronizzazione attiva i dati stanno **sia** in locale (cache, per
+  l'apertura offline) **sia** nel cloud Firestore. Senza accesso restano solo
+  in locale.
+- Ogni account Google vede **solo le proprie** buste (regole Firestore).
 - Il gioco della moneta (busta "decisione") usa Web Audio: su iPhone va sbloccato
   con un tocco. Se non senti nulla, controlla il **silenzioso** dell'iPhone e il
   pulsante 🔊 in alto a destra.
