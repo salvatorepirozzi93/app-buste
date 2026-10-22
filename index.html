@@ -2113,14 +2113,18 @@
 
       // onSnapshot: push in tempo reale da tutti i dispositivi
       syncState.unsubscribe = docRef.onSnapshot(async (snap) => {
-        if (!snap.exists()) {
+        // Nel Firestore "compat" `exists` può essere una proprietà booleana
+        // invece di un metodo: gestiamo entrambe le forme.
+        const exists = (typeof snap.exists === 'function') ? snap.exists() : snap.exists === true;
+        const data = (typeof snap.data === 'function') ? (snap.data() || {}) : (snap.data || {});
+
+        if (!exists) {
           // Prima volta: carichiamo i dati locali esistenti sul cloud
           await pushToCloud(true);
           firstSnapshot = false;
           return;
         }
 
-        const data = snap.data() || {};
         const stamp = data.updatedAt || 0;
 
         // Al primo contatto confrontiamo le due copie: vince la più recente.
