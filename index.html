@@ -1655,7 +1655,8 @@
         content: "[Testo da decidere]",
         color: "cream",
         isOpened: false,
-        links: []
+        links: [],
+        photoUrl: ""
       },
       {
         id: "env-2",
@@ -1663,7 +1664,8 @@
         content: "Come sempre mi sembra che non ci vediamo da 2 anni e la cosa che più desidero è vederti il prima possibile. Questo desiderio lo avrò sempre, se non ti vedo da 2 anni, da una settimana, da 1 giorno o da solo 1 ora. E questo sarà per sempre.",
         color: "kraft",
         isOpened: false,
-        links: []
+        links: [],
+        photoUrl: ""
       },
       {
         id: "env-3",
@@ -1671,15 +1673,19 @@
         content: "Ogni volta che ti saluto é sempre una mierda. Anche se sembra naturale, ogni volta che vai via divento triste e solo penso a quando ti rivedrò. Non immagino una vita senza stare vicino a te ❤️",
         color: "rose",
         isOpened: false,
-        links: []
+        links: [],
+        photoUrl: ""
       },
       {
         id: "env-4",
         title: "Apri quando ti viene tanta voglia di comprare vestiti da Zara",
-        content: "Già sai che in questo momento ti direi: tri tri estás llena de ropa, párate a comprar cosas! Pero bueno, ¡una última cosita vale? Te doy este bono de Zara para regalarte algo de pequeñín.",
+        content: "Già sai che in questo momento ti direi: tri tri estás llena de ropa, párate a comprar cosas! Pero bueno, una última cosita vale? Te doy este bono de Zara para regalarte algo de pequeñín.\n\nApri il link che c’è qui sotto!",
         color: "terracotta",
         isOpened: false,
-        links: ["https://www.zara.com/"]
+        links: [
+          "https://www.zara.com/es/es/gift-card/524942050906/share-details?hash=8405fb0a-081f-4c6b-8432-f03c5534e273"
+        ],
+        photoUrl: ""
       },
       {
         id: "env-5",
@@ -1691,7 +1697,8 @@
           "https://ricette.giallozafferano.it/Spaghetti-alla-Carbonara.html",
           "https://ricette.giallozafferano.it/Penne-con-speck-e-mascarpone.html",
           "https://ricette.giallozafferano.it/Pasta-alla-Genovese.html"
-        ]
+        ],
+        photoUrl: ""
       },
       {
         id: "env-6",
@@ -1699,23 +1706,28 @@
         content: "Para mi tri tri pequeñita que quiere algo de dulce, te dejo esto. Guarda nella busta!",
         color: "cream",
         isOpened: false,
-        links: []
+        links: [],
+        photoUrl: ""
       },
       {
         id: "env-7",
         title: "Apri quando hai voglia di una cena de gordos sí o sí",
-        content: "Te mereces algo de gordo, puedes pedir lo que quieras, te invito yo con esto.\n\n- Buono regalo / Codice Glovo: [Inserisci qui il tuo codice]",
+        content: "Te mereces algo de gordo, puedes pedir lo que quieras, te invito yo con esto.\nApri i link che c’è qui sotto!",
         color: "blue",
         isOpened: false,
-        links: ["https://www.glovoapp.com/"]
+        links: [
+          "https://bitrefill.com/order/6ad90482809407c831d08135#nfvC3U5HSlL7FqpQB4Sx"
+        ],
+        photoUrl: ""
       },
       {
         id: "env-8",
         title: "Apri quando devi prendere una decisione stupida ma non sai cosa scegliere",
-        content: "Un gesto facile per scegliere più facilmente! Prendi la moneta qui sotto, tirala e se esce \"testa\" sceglierai l'opzione A, se esce \"croce\" sceglierai l'opzione B.\n\nBueno, luego llamame, que es mejor que jugárselo a cara o cruz!",
+        content: "Un gesto facile per scegliere più facilmente! Prendi la moneta qui sotto, tirala e se uscirà \"testa\" sceglierai l'opzione A, se uscirà \"croce\" sceglierai l'opzione B.\n\nBueno, luego llamame, que es mejor que jugárselo a cara o cruz!",
         color: "kraft",
         isOpened: false,
-        links: []
+        links: [],
+        photoUrl: ""
       },
       {
         id: "env-9",
@@ -1723,7 +1735,10 @@
         content: "Nuestra cancion!",
         color: "rose",
         isOpened: false,
-        links: ["https://open.spotify.com/"]
+        links: [
+          "https://open.spotify.com/track/10KB4HkYIpNOd0QhyohMre?si=rKLloTMwSiik5r_AIj_sTw&utm_source=copy-link&pi=D4xYXWZRS_-rt"
+        ],
+        photoUrl: ""
       },
       {
         id: "env-10",
@@ -1732,15 +1747,16 @@
         content: "Un giochino per te!\n\n<div id='game-container'></div>",
         color: "sage",
         isOpened: false,
-        links: []
+        links: [],
+        photoUrl: ""
       },
       {
         id: "env-11",
         title: "Apri quando quieres ver algunas fotos de nosotros",
-        content: "Guarda le nostre foto stampate dentro la busta o carica un ricordo speciale qui sopra! ❤️",
+        content: ".",
         color: "terracotta",
         isOpened: false,
-        photoUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80",
+        photoUrl: "https://photos.app.goo.gl/mTsWV4pbPtLnqqDn8",
         links: []
       }
     ];
@@ -2872,8 +2888,22 @@
       const photoFrame = document.getElementById('readModalPolaroid');
       const photoImg = document.getElementById('readModalImg');
       const photoUrl = normalizeImageUrl(env.photoUrl);
+      // I link agli album (Google Foto, Drive, Dropbox) non sono immagini
+      // dirette: li mostriamo come pulsante invece che dentro la polaroid.
+      const isPhotoAlbum = /^https?:\/\/(photos\.app\.goo\.gl|photos\.google\.com|drive\.google\.com|www\.dropbox\.com)\//i.test(photoUrl);
 
-      if (photoUrl) {
+      if (photoUrl && isPhotoAlbum) {
+        const albumLink = document.createElement('a');
+        albumLink.className = 'attached-link-btn';
+        albumLink.href = photoUrl;
+        albumLink.target = '_blank';
+        albumLink.rel = 'noopener noreferrer';
+        albumLink.innerHTML = '<i class="fa-solid fa-images"></i> Apri l\'album di foto';
+        linksContainer.appendChild(albumLink);
+        photoImg.onerror = null;
+        photoImg.removeAttribute('src');
+        photoFrame.style.display = 'none';
+      } else if (photoUrl) {
         photoImg.onerror = () => { photoFrame.style.display = 'none'; };
         photoImg.src = photoUrl;
         photoFrame.style.display = 'block';
