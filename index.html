@@ -2265,6 +2265,10 @@
             syncState.lastRemoteStamp = 0;
             startSync(user, db);
             syncStatus('synced', 'Sincronizzato');
+            // Se la sessione era già attiva non deve ricomparire la richiesta
+            // di accesso (succedeva al riavvio dell'app, soprattutto su mobile).
+            closeLoginModal();
+            showLoginError('');
           } else {
             stopSync();
             syncState.user = null;
