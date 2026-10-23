@@ -2233,6 +2233,13 @@
         syncState.enabled = true;
 
         // Rientro dal redirect di Google (su mobile): completiamo l'accesso
+        // Riconosce il rientro da Google (redirect) anche quando il browser
+        // ha bloccato i cookie: così possiamo avvisare invece di lasciare
+        // l'utente davanti alla schermata di login senza spiegazioni.
+        const backFromGoogle = /(?:[?#&])(apiKey|authType|eventId|state|scope|code|error)=/.test(
+          window.location.search + window.location.hash
+        );
+
         try {
           if (auth.getRedirectResult) {
             const result = await auth.getRedirectResult();
@@ -2244,10 +2251,13 @@
               const modal = document.getElementById('loginModal');
               if (modal) modal.classList.remove('active');
               syncBodyScroll();
+            } else if (backFromGoogle) {
+              showLoginError('Google non ha completato l\'accesso. Tocca di nuovo «Accedi con Google».');
             }
           }
         } catch (err) {
           console.warn('Redirect non completato:', err);
+          if (backFromGoogle) showLoginError(firebaseErrorMessage(err));
         }
 
         auth.onAuthStateChanged((user) => {
@@ -2274,12 +2284,31 @@
       if (!syncState.auth) throw new Error('Firebase non pronto');
       const provider = new firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      // rete di sicurezza: popup su desktop, redirect su mobile
-      if (window.matchMedia('(max-width: 820px)').matches) {
-        await syncState.auth.signInWithRedirect(provider);
+
+      // Usiamo SEMPRE il popup, anche su iPhone/iPad.
+      // Il redirect su Safari perde il risultato del login (cookie di terze
+      // parti bloccati dal browser): l'accesso riesce su Google ma l'app
+      // torna alla schermata di login. Il popup invece funziona su tutti i
+      // browser, purché sia aperto da un tocco reale sull'utente.
+      try {
+        await syncState.auth.signInWithPopup(provider);
         return;
+      } catch (err) {
+        const code = (err && err.code) || '';
+        const popupUnavailable = [
+          'auth/popup-blocked',
+          'auth/operation-not-supported-in-this-environment',
+          'auth/web-storage-unsupported'
+        ].includes(code);
+
+        if (!popupUnavailable) throw err;
+
+        // Ultima spiaggia: redirect (può funzionare se i cookie di terze
+        // parti sono consentiti). Se anche questo non conclude, l'utente
+        // vedrà un messaggio chiaro invece di un ritorno silenzioso.
+        showLoginError('Apro la pagina di Google… Se non si apre, disattiva il blocco popup e riprova.');
+        await syncState.auth.signInWithRedirect(provider);
       }
-      await syncState.auth.signInWithPopup(provider);
     }
 
     async function firebaseSignOut() {
